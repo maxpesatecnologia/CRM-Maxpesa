@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Columns3, Users, Settings, ChevronLeft, ChevronRight, Menu } from 'lucide-react';
+import { LayoutDashboard, Columns3, Users as UsersIcon, Settings, ChevronLeft, ChevronRight, Menu, Truck, CheckSquare, UserCircle2, BarChart2 } from 'lucide-react';
 import './layout.css';
 
 const Sidebar = () => {
@@ -12,7 +12,7 @@ const Sidebar = () => {
         {!collapsed && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
             <div style={{ 
-              backgroundColor: '#E60000', 
+              backgroundColor: '#FF2A2A', 
               borderRadius: '8px', 
               width: '32px', 
               height: '32px', 
@@ -25,13 +25,12 @@ const Sidebar = () => {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', marginTop: '2px' }}>
               <div style={{ display: 'flex', fontWeight: 800, fontSize: '18px', letterSpacing: '0.5px', lineHeight: 1 }}>
-                <span style={{ color: '#ff8a80' }}>MAX</span>
-                <span style={{ color: '#E60000' }}>PESA</span>
+                <span style={{ color: '#FF2A2A' }}>MAXPESA</span>
               </div>
               <span style={{ color: '#718096', fontSize: '9px', fontWeight: 600, marginTop: '2px', letterSpacing: '0.2px' }}>
                 LOCAÇÃO DE GUINDASTE
               </span>
-              <span style={{ color: '#E60000', fontSize: '10px', fontWeight: 800, marginTop: '1px', letterSpacing: '1px' }}>
+              <span style={{ color: '#FF2A2A', fontSize: '10px', fontWeight: 800, marginTop: '1px', letterSpacing: '1px' }}>
                 CRM
               </span>
             </div>
@@ -54,8 +53,28 @@ const Sidebar = () => {
         </NavLink>
         
         <NavLink to="/contacts" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
-          <Users size={20} className="nav-icon" />
-          <span className="nav-text">Contatos</span>
+          <UsersIcon size={20} className="nav-icon" />
+          <span className="nav-text">Empresa</span>
+        </NavLink>
+
+        <NavLink to="/tarefas" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+          <CheckSquare size={20} className="nav-icon" />
+          <span className="nav-text">Tarefas</span>
+        </NavLink>
+
+        <NavLink to="/frota" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+          <Truck size={20} className="nav-icon" />
+          <span className="nav-text">Produtos/Frota</span>
+        </NavLink>
+
+        <NavLink to="/usuarios" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+          <UserCircle2 size={20} className="nav-icon" />
+          <span className="nav-text">Usuários</span>
+        </NavLink>
+
+        <NavLink to="/relatorios" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+          <BarChart2 size={20} className="nav-icon" />
+          <span className="nav-text">Relatórios</span>
         </NavLink>
       </div>
       

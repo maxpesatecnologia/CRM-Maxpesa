@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { useCRM } from '../context/CRMContext';
-import { Plus, Search, Building2, MapPin, Phone, Mail, X } from 'lucide-react';
+import { Plus, Search, Building2, MapPin, Phone, Mail, X, Briefcase, ListTodo, Calendar, DollarSign, Info } from 'lucide-react';
 import './Contacts.css';
+import './CompanyDetails.css';
 
 const Contacts = () => {
-  const { contacts, addContact } = useCRM();
+  const { contacts, addContact, deals, tasks, stages } = useCRM();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  // Estado para visualização 360
+  const [viewingContact, setViewingContact] = useState(null);
+  const [activeDetailTab, setActiveDetailTab] = useState('dados'); // 'dados', 'vendas', 'atividades'
 
   const [form, setForm] = useState({
     empresa: '', documento: '', endereco: '', bairro: '', cidade: '', cep: '', uf: '', telefone: '', contatos: '', email: '', segmento: ''
@@ -26,15 +31,22 @@ const Contacts = () => {
     (c.documento && c.documento.includes(searchTerm))
   );
 
+  // Filtros para visão 360
+  const contactDeals = viewingContact ? deals.filter(d => d.empresa === viewingContact.empresa) : [];
+  const contactTasks = viewingContact ? tasks.filter(t => t.empresa === viewingContact.empresa) : [];
+
+  const getStageTitle = (id) => stages.find(s => s.id === id)?.title || id;
+  const formatCurrency = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+
   return (
     <div className="contacts-wrapper">
       <div className="contacts-header">
         <div>
-          <h1>Contatos e Empresas</h1>
+          <h1>Empresas</h1>
           <p>Gerencie sua carteira de clientes e empresas cadastradas.</p>
         </div>
         <button className="btn-primary" onClick={() => setIsModalOpen(true)}>
-          <Plus size={18} /> Novo Contato
+          <Plus size={18} /> Nova Empresa
         </button>
       </div>
 
@@ -51,7 +63,7 @@ const Contacts = () => {
         </div>
       </div>
 
-      <div className="contacts-table-container">
+      <div className="contacts-table-container focus-within:ring-2">
         <table className="contacts-table">
           <thead>
             <tr>
@@ -66,7 +78,7 @@ const Contacts = () => {
           </thead>
           <tbody>
             {filteredContacts.map((contact) => (
-              <tr key={contact.id}>
+              <tr key={contact.id} onClick={() => { setViewingContact(contact); setActiveDetailTab('dados'); }} style={{ cursor: 'pointer' }}>
                 <td>
                   <div className="contact-name-cell">
                     <div style={{ backgroundColor: 'var(--primary-light)', color: 'var(--primary-hover)', padding: '0.3rem', borderRadius: '4px' }}>
@@ -116,11 +128,149 @@ const Contacts = () => {
         </table>
       </div>
 
+      {/* MODAL DETALHES 360 */}
+      {viewingContact && (
+        <div className="details-modal-overlay">
+          <div className="details-modal-content">
+            <div className="details-modal-header">
+              <div className="company-identifier">
+                <div className="company-logo-placeholder">
+                  <Building2 size={32} />
+                </div>
+                <div className="company-title-info">
+                  <h2>{viewingContact.empresa}</h2>
+                  <p>{viewingContact.documento || 'Sem documento'}</p>
+                </div>
+              </div>
+              <button 
+                className="close-btn" 
+                onClick={() => setViewingContact(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+              >
+                <X size={28} />
+              </button>
+            </div>
+
+            <div className="details-tabs">
+              <button 
+                className={`tab-btn ${activeDetailTab === 'dados' ? 'active' : ''}`} 
+                onClick={() => setActiveDetailTab('dados')}
+              >
+                <Info size={16} style={{ marginBottom: '-3px', marginRight: '6px' }} /> Informações
+              </button>
+              <button 
+                className={`tab-btn ${activeDetailTab === 'vendas' ? 'active' : ''}`} 
+                onClick={() => setActiveDetailTab('vendas')}
+              >
+                <Briefcase size={16} style={{ marginBottom: '-3px', marginRight: '6px' }} /> Negociações ({contactDeals.length})
+              </button>
+              <button 
+                className={`tab-btn ${activeDetailTab === 'atividades' ? 'active' : ''}`} 
+                onClick={() => setActiveDetailTab('atividades')}
+              >
+                <ListTodo size={16} style={{ marginBottom: '-3px', marginRight: '6px' }} /> Atividades ({contactTasks.length})
+              </button>
+            </div>
+
+            <div className="details-body">
+              {activeDetailTab === 'dados' && (
+                <div className="info-section">
+                  <div className="info-item">
+                    <label>Pessoa de Contato</label>
+                    <span>{viewingContact.contatos || 'Não informado'}</span>
+                  </div>
+                  <div className="info-item">
+                    <label>E-mail</label>
+                    <span className="flex items-center gap-2"><Mail size={14}/> {viewingContact.email || '-'}</span>
+                  </div>
+                  <div className="info-item">
+                    <label>Telefone</label>
+                    <span className="flex items-center gap-2"><Phone size={14}/> {viewingContact.telefone || '-'}</span>
+                  </div>
+                  <div className="info-item">
+                    <label>Segmento</label>
+                    <span>{viewingContact.segmento || '-'}</span>
+                  </div>
+                  <div className="info-item" style={{ gridColumn: 'span 2' }}>
+                    <label>Endereço Completo</label>
+                    <span className="flex items-center gap-2">
+                       <MapPin size={14}/> {[viewingContact.endereco, viewingContact.bairro, viewingContact.cidade, viewingContact.uf].filter(Boolean).join(', ') || 'Não informado'}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {activeDetailTab === 'vendas' && (
+                <div className="list-container">
+                  {contactDeals.length > 0 ? contactDeals.map(deal => (
+                    <div key={deal.id} className="list-item">
+                      <div className="item-main-info">
+                        <h4>{deal.empresa}</h4>
+                        <div className="item-sub-info">
+                          <span className="flex items-center gap-1"><Calendar size={12}/> {deal.dataCriacao}</span>
+                          <span className="flex items-center gap-1"><Info size={12}/> {deal.produto || 'N/A'}</span>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: 'right' }}>
+                        <div className="amount-badge">{formatCurrency(deal.valorUnico)}</div>
+                        <span className={`status-badge ${deal.etapaId === 'etapa-7' ? 'perda' : deal.etapaId === 'etapa-8' ? 'ganho' : 'andamento'}`}>
+                          {getStageTitle(deal.etapaId)}
+                        </span>
+                      </div>
+                    </div>
+                  )) : (
+                    <div className="empty-details">Nenhuma negociação encontrada para esta empresa.</div>
+                  )}
+                </div>
+              )}
+
+              {activeDetailTab === 'atividades' && (
+                <div className="list-container">
+                  {contactTasks.length > 0 ? contactTasks.map(task => (
+                    <div key={task.id} className="list-item">
+                      <div className="item-main-info">
+                        <h4 style={{ textDecoration: task.concluida ? 'line-through' : 'none', color: task.concluida ? 'var(--text-muted)' : 'var(--text-main)' }}>
+                          {task.titulo || task.assunto}
+                        </h4>
+                        <div className="item-sub-info">
+                          <span className="flex items-center gap-1"><Calendar size={12}/> {task.dataAgendamento}</span>
+                          {task.tipoTarefa && <span>• {task.tipoTarefa}</span>}
+                        </div>
+                      </div>
+                      <div>
+                        {task.concluida ? (
+                          <span className="status-badge ganho">Finalizada</span>
+                        ) : (
+                          <span className="status-badge andamento">Pendente</span>
+                        )}
+                      </div>
+                    </div>
+                  )) : (
+                    <div className="empty-details">Nenhuma atividade agendada.</div>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="modal-footer" style={{ borderTop: '1px solid var(--border-color)', padding: '1rem 1.5rem', backgroundColor: 'white' }}>
+              <button 
+                type="button" 
+                className="btn-secondary" 
+                onClick={() => setViewingContact(null)}
+              >
+                Fechar Visualização
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL CADASTRO */}
       {isModalOpen && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div className="modal-content" style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', zIndex: 1100 }}>
             <div className="modal-header">
-              <h2>Novo Contato / Empresa</h2>
+              <h2>Nova Empresa</h2>
               <button onClick={() => setIsModalOpen(false)} style={{background:'none', border:'none', cursor:'pointer'}}><X size={24}/></button>
             </div>
             
@@ -203,7 +353,7 @@ const Contacts = () => {
 
               <div className="modal-footer" style={{ gridColumn: 'span 2', marginTop: '1rem' }}>
                 <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn-primary">Salvar Contato</button>
+                <button type="submit" className="btn-primary">Salvar Empresa</button>
               </div>
             </form>
 

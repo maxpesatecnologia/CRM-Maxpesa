@@ -1,99 +1,157 @@
 import React from 'react';
 import { useCRM } from '../context/CRMContext';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from 'recharts';
-import { Target, TrendingUp, DollarSign, Users } from 'lucide-react';
+import { Target, TrendingUp, DollarSign, Trophy, Users, CheckSquare, Building2 } from 'lucide-react';
+import './Dashboard.css';
 
 const Dashboard = () => {
-  const { deals, stages } = useCRM();
+  const { deals, stages, contacts, tasks, users, fleet } = useCRM();
 
-  // Calcula Métricas
+  // Métricas
   const totalDeals = deals.length;
   const wonDeals = deals.filter(d => d.etapaId === 'etapa-8');
   const wonAmount = wonDeals.reduce((acc, curr) => acc + (Number(curr.valorUnico) || 0), 0);
-  
   const lostDeals = deals.filter(d => d.etapaId === 'etapa-7');
-  
   const inProgressDeals = deals.filter(d => d.etapaId !== 'etapa-8' && d.etapaId !== 'etapa-7');
   const inProgressAmount = inProgressDeals.reduce((acc, curr) => acc + (Number(curr.valorUnico) || 0), 0);
+  const pendingTasks = tasks.filter(t => !t.concluida).length;
+  const activeUsers = users.filter(u => u.status === 'Ativo').length;
 
-  // Calcula distribuição por etapa
-  const stageDistribution = stages.map(stage => {
-    return {
-      name: stage.title,
-      count: deals.filter(d => d.etapaId === stage.id).length
-    };
-  });
+  // Frota em Uso (Equipamentos em negociações ativas)
+  const fleetInProgress = new Set(
+    inProgressDeals
+      .map(d => d.produto)
+      .filter(p => fleet.some(f => f.nome === p))
+  ).size;
+  const totalFleetItems = fleet.length;
+
+  // Distribuição por etapa para gráfico
+  const stageData = stages.map(stage => ({
+    name: stage.title,
+    count: deals.filter(d => d.etapaId === stage.id).length,
+    isWon: stage.id === 'etapa-8',
+    isLost: stage.id === 'etapa-7',
+  }));
+  const maxCount = Math.max(...stageData.map(s => s.count), 1);
+
+  const formatCurrency = (v) =>
+    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+
+  const MetricCard = ({ title, value, sub, icon, color, borderColor }) => (
+    <div className="metric-card" style={{ borderLeft: `4px solid ${borderColor || color}` }}>
+      <div className="metric-card-header">
+        <span className="metric-title">{title}</span>
+        <span className="metric-icon" style={{ color }}>{icon}</span>
+      </div>
+      <div className="metric-value" style={{ color }}>{value}</div>
+      {sub && <div className="metric-sub">{sub}</div>}
+    </div>
+  );
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '2rem' }}>
-      <div>
-        <h1 style={{ marginBottom: '0.5rem' }}>Dashboard</h1>
+    <div className="dashboard-wrapper">
+      <div className="dashboard-header">
+        <h1>Dashboard</h1>
         <p className="text-muted">Visão geral do seu funil e desempenho de vendas.</p>
       </div>
 
       {/* Cards de Métricas */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '1.5rem' }}>
-        
-        <div style={{ backgroundColor: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
-          <div className="flex items-center justify-between" style={{ marginBottom: '1rem' }}>
-            <h3 className="text-sm text-muted font-medium">Ganho Total</h3>
-            <DollarSign size={20} color="var(--success-color)" />
-          </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>
-            {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(wonAmount)}
-          </div>
-          <div className="text-xs text-muted" style={{ marginTop: '0.5rem' }}>
-            Em {wonDeals.length} negociações vencidas
-          </div>
-        </div>
-
-        <div style={{ backgroundColor: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
-          <div className="flex items-center justify-between" style={{ marginBottom: '1rem' }}>
-            <h3 className="text-sm text-muted font-medium">Em Andamento</h3>
-            <TrendingUp size={20} color="var(--primary-color)" />
-          </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>
-             {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(inProgressAmount)}
-          </div>
-          <div className="text-xs text-muted" style={{ marginTop: '0.5rem' }}>
-             Projetado em {inProgressDeals.length} negociações
-          </div>
-        </div>
-
-        <div style={{ backgroundColor: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
-          <div className="flex items-center justify-between" style={{ marginBottom: '1rem' }}>
-            <h3 className="text-sm text-muted font-medium">Negociações Perdidas</h3>
-            <Target size={20} color="var(--danger-color)" />
-          </div>
-          <div style={{ fontSize: '1.8rem', fontWeight: 'bold' }}>
-             {lostDeals.length}
-          </div>
-          <div className="text-xs text-muted" style={{ marginTop: '0.5rem' }}>
-             Total de negócios declinados ou perdidos
-          </div>
-        </div>
-
+      <div className="metrics-grid">
+        <MetricCard
+          title="Ganho Total"
+          value={formatCurrency(wonAmount)}
+          sub={`Em ${wonDeals.length} negociação(ões) vencida(s)`}
+          icon={<DollarSign size={20} />}
+          color="#10B981"
+          borderColor="#10B981"
+        />
+        <MetricCard
+          title="Em Andamento"
+          value={formatCurrency(inProgressAmount)}
+          sub={`Projetado em ${inProgressDeals.length} negociação(ões)`}
+          icon={<TrendingUp size={20} />}
+          color="#3B82F6"
+          borderColor="#3B82F6"
+        />
+        <MetricCard
+          title="Frota em Negociação"
+          value={fleetInProgress}
+          sub={`De ${totalFleetItems} itens cadastrados`}
+          icon={<Target size={20} />}
+          color="#8B5CF6"
+          borderColor="#8B5CF6"
+        />
+        <MetricCard
+          title="Oportunidades Ganhas"
+          value={wonDeals.length}
+          sub={`${formatCurrency(wonAmount)} em negócios fechados`}
+          icon={<Trophy size={20} />}
+          color="#10B981"
+          borderColor="#10B981"
+        />
+        <MetricCard
+          title="Empresas Cadastradas"
+          value={contacts.length}
+          sub="Na base de clientes"
+          icon={<Building2 size={20} />}
+          color="#6366F1"
+          borderColor="#6366F1"
+        />
+        <MetricCard
+          title="Tarefas Pendentes"
+          value={pendingTasks}
+          sub={`De ${tasks.length} total de tarefas`}
+          icon={<CheckSquare size={20} />}
+          color="#F59E0B"
+          borderColor="#F59E0B"
+        />
       </div>
 
-      {/* Gráficos */}
-      <div style={{ backgroundColor: 'var(--surface-color)', padding: '1.5rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-sm)' }}>
-        <h3 style={{ marginBottom: '1.5rem' }}>Oportunidades por Etapa</h3>
-        <div style={{ height: '300px', width: '100%' }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={stageDistribution} margin={{ top: 20, right: 30, left: 0, bottom: 5 }}>
-              <XAxis dataKey="name" tick={{ fontSize: 12, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} />
-              <YAxis tick={{ fontSize: 12, fill: 'var(--text-muted)' }} axisLine={false} tickLine={false} allowDecimals={false} />
-              <Tooltip 
-                cursor={{ fill: 'var(--bg-color)' }}
-                contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: 'var(--shadow-md)' }}
-              />
-              <Bar dataKey="count" radius={[4, 4, 0, 0]}>
-                {stageDistribution.map((entry, index) => (
-                   <Cell key={`cell-${index}`} fill={entry.name === 'Vencemos' ? 'var(--success-color)' : entry.name === 'Perdemos' ? 'var(--danger-color)' : 'var(--primary-color)'} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
+      {/* Gráfico CSS de barras */}
+      <div className="chart-card">
+        <h3>Oportunidades por Etapa do Funil</h3>
+        <div className="bar-chart">
+          {stageData.map((stage, i) => {
+            const heightPct = maxCount > 0 ? (stage.count / maxCount) * 100 : 0;
+            const barColor = stage.isWon ? '#10B981' : stage.isLost ? '#EF4444' : '#FF2A2A';
+            return (
+              <div key={i} className="bar-col">
+                <div className="bar-count">{stage.count}</div>
+                <div className="bar-track">
+                  <div
+                    className="bar-fill"
+                    style={{ height: `${heightPct}%`, backgroundColor: barColor }}
+                  />
+                </div>
+                <div className="bar-label" title={stage.name}>
+                  {stage.name.length > 10 ? stage.name.slice(0, 10) + '…' : stage.name}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Resumo rápido */}
+      <div className="summary-row">
+        <div className="summary-card">
+          <h4>Equipe Ativa</h4>
+          <div className="summary-value">{activeUsers} <span>/ {users.length} usuários</span></div>
+        </div>
+        <div className="summary-card">
+          <h4>Total de Negociações</h4>
+          <div className="summary-value">{totalDeals}</div>
+        </div>
+        <div className="summary-card">
+          <h4>Taxa de Conversão</h4>
+          <div className="summary-value">
+            {totalDeals > 0 ? ((wonDeals.length / totalDeals) * 100).toFixed(1) : 0}%
+          </div>
+        </div>
+        <div className="summary-card">
+          <h4>Valor Médio por Negócio</h4>
+          <div className="summary-value">
+            {wonDeals.length > 0 ? formatCurrency(wonAmount / wonDeals.length) : formatCurrency(0)}
+          </div>
         </div>
       </div>
     </div>

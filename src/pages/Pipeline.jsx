@@ -117,7 +117,7 @@ const Column = ({ title, id, deals, onEdit, onDelete }) => {
 
 // --- Main Pipeline Component ---
 const Pipeline = () => {
-  const { stages, deals, moveDeal, addDeal, updateDeal, deleteDeal, lossReasons } = useCRM();
+  const { stages, deals, moveDeal, addDeal, updateDeal, deleteDeal, lossReasons, fleet } = useCRM();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [lossModalOpen, setLossModalOpen] = useState(false);
   const [pendingMove, setPendingMove] = useState(null);
@@ -195,14 +195,18 @@ const Pipeline = () => {
     e.preventDefault();
     if (!newDealForm.empresa) return;
     
+    const finalProduct = newDealForm.produto === 'Personalizado' ? newDealForm.produtoManual : newDealForm.produto;
+    
     if (editingDealId) {
       updateDeal(editingDealId, {
         ...newDealForm,
+        produto: finalProduct,
         valorUnico: Number(newDealForm.valorUnico) || 0
       });
     } else {
       addDeal({
         ...newDealForm,
+        produto: finalProduct,
         valorUnico: Number(newDealForm.valorUnico) || 0
       });
     }
@@ -323,14 +327,38 @@ const Pipeline = () => {
               {activeTab === 'produto' && (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                   <div className="form-group">
-                    <label>Produto / Serviço Ofertado</label>
-                    <input 
-                      type="text" 
+                    <label>Produto / Serviço (Frota)</label>
+                    <select 
                       value={newDealForm.produto} 
-                      onChange={e => setNewDealForm({...newDealForm, produto: e.target.value})} 
-                      placeholder="Ex: Licença Enterprise CRM"
-                    />
+                      onChange={e => {
+                        const selectedName = e.target.value;
+                        const fleetItem = fleet.find(item => item.nome === selectedName);
+                        setNewDealForm({
+                          ...newDealForm, 
+                          produto: selectedName,
+                          valorUnico: fleetItem ? fleetItem.valor : newDealForm.valorUnico
+                        });
+                      }}
+                    >
+                      <option value="">Selecione um item da frota...</option>
+                      {fleet.filter(item => item.exibirNaNegociacao).map(item => (
+                        <option key={item.id} value={item.nome}>{item.nome} - {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(item.valor)}</option>
+                      ))}
+                      <option value="Personalizado">-- Outro (Manual) --</option>
+                    </select>
                   </div>
+
+                  {newDealForm.produto === 'Personalizado' && (
+                    <div className="form-group">
+                      <label>Nome do Produto Customizado</label>
+                      <input 
+                        type="text" 
+                        placeholder="Digite o nome do produto..."
+                        onChange={e => setNewDealForm({...newDealForm, produtoManual: e.target.value})}
+                      />
+                    </div>
+                  )}
+
                   <div className="form-group">
                     <label>Valor Único Negociado (R$)</label>
                     <input 
@@ -341,7 +369,7 @@ const Pipeline = () => {
                     />
                   </div>
                   <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-                    O produto e valor serão exibidos diretamente no card do funil para rápida consulta.
+                    Ao selecionar um item da frota, o valor padrão é sugerido automaticamente.
                   </p>
                 </div>
               )}
