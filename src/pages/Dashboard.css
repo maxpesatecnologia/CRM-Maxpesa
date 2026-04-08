@@ -6,6 +6,15 @@
   animation: fadeIn 0.3s ease;
 }
 
+/* ── Cabeçalho ── */
+.dashboard-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
 .dashboard-header h1 {
   font-size: 1.7rem;
   font-weight: 700;
@@ -13,7 +22,100 @@
   margin: 0 0 0.25rem 0;
 }
 
-/* Cards de Métricas */
+/* ── Filtros ── */
+.dashboard-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-radius: 10px;
+  padding: 0.65rem 1rem;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.filter-group label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #64748B;
+  white-space: nowrap;
+}
+
+.filter-icon {
+  color: #94A3B8;
+}
+
+.filter-select,
+.filter-input {
+  font-size: 0.82rem;
+  color: #0F172A;
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 6px;
+  padding: 0.3rem 0.55rem;
+  outline: none;
+  transition: border-color 0.2s;
+  cursor: pointer;
+}
+
+.filter-select:focus,
+.filter-input:focus {
+  border-color: var(--primary-color, #FF2A2A);
+}
+
+.filter-select {
+  min-width: 130px;
+}
+
+.filter-input {
+  min-width: 120px;
+}
+
+.filter-clear-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #EF4444;
+  background: #FEF2F2;
+  border: 1px solid #FECACA;
+  border-radius: 6px;
+  padding: 0.3rem 0.65rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.filter-clear-btn:hover {
+  background: #FEE2E2;
+}
+
+/* Badge de filtro ativo */
+.filter-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  font-size: 0.78rem;
+  color: #64748B;
+  background: #FFF7ED;
+  border: 1px solid #FED7AA;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+}
+
+.filter-badge span {
+  color: #92400E;
+}
+
+/* ── Cards de Métricas ── */
 .metrics-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -29,6 +131,12 @@
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+
+.metric-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  transform: translateY(-2px);
 }
 
 .metric-card-header {
@@ -61,7 +169,7 @@
   color: #94A3B8;
 }
 
-/* Gráfico CSS */
+/* ── Gráfico CSS ── */
 .chart-card {
   background: white;
   border-radius: 10px;
@@ -130,7 +238,7 @@
   max-width: 100%;
 }
 
-/* Resumo rápido */
+/* ── Resumo rápido ── */
 .summary-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -143,6 +251,11 @@
   padding: 1.1rem 1.3rem;
   box-shadow: 0 1px 3px rgba(0,0,0,0.07);
   border: 1px solid #E2E8F0;
+  transition: box-shadow 0.2s;
+}
+
+.summary-card:hover {
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
 .summary-card h4 {

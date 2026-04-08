@@ -1,34 +1,72 @@
-import React from 'react';
+import React, { useState, useMemo } from 'react';
 import { useCRM } from '../context/CRMContext';
-import { Target, TrendingUp, DollarSign, Trophy, Users, CheckSquare, Building2 } from 'lucide-react';
+import { Target, TrendingUp, DollarSign, Trophy, Clock, Building2, Loader2, Filter, X } from 'lucide-react';
 import './Dashboard.css';
 
 const Dashboard = () => {
-  const { deals, stages, contacts, tasks, users, fleet } = useCRM();
+  const { deals, stages, contacts, users, fleet, isLoading } = useCRM();
 
-  // Métricas
-  const totalDeals = deals.length;
-  const wonDeals = deals.filter(d => d.etapaId === 'etapa-8');
-  const wonAmount = wonDeals.reduce((acc, curr) => acc + (Number(curr.valorUnico) || 0), 0);
-  const lostDeals = deals.filter(d => d.etapaId === 'etapa-7');
-  const inProgressDeals = deals.filter(d => d.etapaId !== 'etapa-8' && d.etapaId !== 'etapa-7');
+  // ── Filtros ──────────────────────────────────────────────────────────────
+  const [filterVendedor, setFilterVendedor] = useState('');
+  const [filterDataInicio, setFilterDataInicio] = useState('');
+  const [filterDataFim, setFilterDataFim] = useState('');
+
+  const hasFilter = filterVendedor || filterDataInicio || filterDataFim;
+
+  const clearFilters = () => {
+    setFilterVendedor('');
+    setFilterDataInicio('');
+    setFilterDataFim('');
+  };
+
+  // Lista de vendedores ativos para o select
+  const activeUsers = useMemo(() => users.filter(u => u.status === 'Ativo'), [users]);
+
+  // Deals filtrados
+  const filteredDeals = useMemo(() => {
+    return deals.filter(d => {
+      if (filterVendedor && d.vendedor !== filterVendedor) return false;
+      const data = d.dataCriacao || '';
+      if (filterDataInicio && data < filterDataInicio) return false;
+      if (filterDataFim   && data > filterDataFim)   return false;
+      return true;
+    });
+  }, [deals, filterVendedor, filterDataInicio, filterDataFim]);
+
+  // ── Métricas ──────────────────────────────────────────────────────────────
+  const totalDeals       = filteredDeals.length;
+  const wonDeals         = filteredDeals.filter(d => d.etapaId === 'etapa-8');
+  const wonAmount        = wonDeals.reduce((acc, curr) => acc + (Number(curr.valorUnico) || 0), 0);
+  const inProgressDeals  = filteredDeals.filter(d => d.etapaId !== 'etapa-8' && d.etapaId !== 'etapa-7');
   const inProgressAmount = inProgressDeals.reduce((acc, curr) => acc + (Number(curr.valorUnico) || 0), 0);
-  const pendingTasks = tasks.filter(t => !t.concluida).length;
-  const activeUsers = users.filter(u => u.status === 'Ativo').length;
 
-  // Frota em Uso (Equipamentos em negociações ativas)
+  // Frota em Negociação
   const fleetInProgress = new Set(
-    inProgressDeals
-      .map(d => d.produto)
-      .filter(p => fleet.some(f => f.nome === p))
+    inProgressDeals.map(d => d.produto).filter(p => fleet.some(f => f.nome === p))
   ).size;
-  const totalFleetItems = fleet.length;
 
-  // Distribuição por etapa para gráfico
+  // ── Tempo Médio até a Venda ───────────────────────────────────────────────
+  const avgDaysToClose = useMemo(() => {
+    const closed = wonDeals.filter(d => {
+      const inicio = d.dataCriacao;
+      const fim    = d.dataFechamento;
+      return inicio && fim;
+    });
+    if (closed.length === 0) return null;
+    const totalDays = closed.reduce((acc, d) => {
+      const inicio = new Date(d.dataCriacao);
+      const fim    = new Date(d.dataFechamento);
+      const diff   = Math.max(0, Math.round((fim - inicio) / (1000 * 60 * 60 * 24)));
+      return acc + diff;
+    }, 0);
+    return Math.round(totalDays / closed.length);
+  }, [wonDeals]);
+
+  // Distribuição por etapa para o gráfico
   const stageData = stages.map(stage => ({
-    name: stage.title,
-    count: deals.filter(d => d.etapaId === stage.id).length,
-    isWon: stage.id === 'etapa-8',
+    name:   stage.title,
+    count:  filteredDeals.filter(d => d.etapaId === stage.id).length,
+    isWon:  stage.id === 'etapa-8',
     isLost: stage.id === 'etapa-7',
   }));
   const maxCount = Math.max(...stageData.map(s => s.count), 1);
@@ -36,8 +74,8 @@ const Dashboard = () => {
   const formatCurrency = (v) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
 
-  const MetricCard = ({ title, value, sub, icon, color, borderColor }) => (
-    <div className="metric-card" style={{ borderLeft: `4px solid ${borderColor || color}` }}>
+  const MetricCard = ({ title, value, sub, icon, color }) => (
+    <div className="metric-card" style={{ borderLeft: `4px solid ${color}` }}>
       <div className="metric-card-header">
         <span className="metric-title">{title}</span>
         <span className="metric-icon" style={{ color }}>{icon}</span>
@@ -47,14 +85,78 @@ const Dashboard = () => {
     </div>
   );
 
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center" style={{ height: 'calc(100vh - 100px)' }}>
+        <Loader2 className="animate-spin" size={40} style={{ color: 'var(--primary-color)' }} />
+      </div>
+    );
+  }
+
   return (
     <div className="dashboard-wrapper">
+
+      {/* ── Cabeçalho com Filtros ── */}
       <div className="dashboard-header">
-        <h1>Dashboard</h1>
-        <p className="text-muted">Visão geral do seu funil e desempenho de vendas.</p>
+        <div>
+          <h1>Dashboard</h1>
+          <p className="text-muted">Visão geral do funil e desempenho de vendas.</p>
+        </div>
+
+        <div className="dashboard-filters">
+          <div className="filter-group">
+            <Filter size={14} className="filter-icon" />
+            <label>Vendedor</label>
+            <select
+              value={filterVendedor}
+              onChange={e => setFilterVendedor(e.target.value)}
+              className="filter-select"
+            >
+              <option value="">Todos</option>
+              {activeUsers.map(u => (
+                <option key={u.id} value={u.nome}>{u.nome}</option>
+              ))}
+            </select>
+          </div>
+
+          <div className="filter-group">
+            <label>De</label>
+            <input
+              type="date"
+              value={filterDataInicio}
+              onChange={e => setFilterDataInicio(e.target.value)}
+              className="filter-input"
+            />
+          </div>
+
+          <div className="filter-group">
+            <label>Até</label>
+            <input
+              type="date"
+              value={filterDataFim}
+              onChange={e => setFilterDataFim(e.target.value)}
+              className="filter-input"
+            />
+          </div>
+
+          {hasFilter && (
+            <button className="filter-clear-btn" onClick={clearFilters} title="Limpar filtros">
+              <X size={14} /> Limpar
+            </button>
+          )}
+        </div>
       </div>
 
-      {/* Cards de Métricas */}
+      {hasFilter && (
+        <div className="filter-badge">
+          Exibindo resultados filtrados
+          {filterVendedor  && <span>· Vendedor: <strong>{filterVendedor}</strong></span>}
+          {filterDataInicio && <span>· De: <strong>{filterDataInicio}</strong></span>}
+          {filterDataFim    && <span>· Até: <strong>{filterDataFim}</strong></span>}
+        </div>
+      )}
+
+      {/* ── Cards de Métricas ── */}
       <div className="metrics-grid">
         <MetricCard
           title="Ganho Total"
@@ -62,7 +164,6 @@ const Dashboard = () => {
           sub={`Em ${wonDeals.length} negociação(ões) vencida(s)`}
           icon={<DollarSign size={20} />}
           color="#10B981"
-          borderColor="#10B981"
         />
         <MetricCard
           title="Em Andamento"
@@ -70,15 +171,13 @@ const Dashboard = () => {
           sub={`Projetado em ${inProgressDeals.length} negociação(ões)`}
           icon={<TrendingUp size={20} />}
           color="#3B82F6"
-          borderColor="#3B82F6"
         />
         <MetricCard
           title="Frota em Negociação"
           value={fleetInProgress}
-          sub={`De ${totalFleetItems} itens cadastrados`}
+          sub={`De ${fleet.length} itens cadastrados`}
           icon={<Target size={20} />}
           color="#8B5CF6"
-          borderColor="#8B5CF6"
         />
         <MetricCard
           title="Oportunidades Ganhas"
@@ -86,7 +185,6 @@ const Dashboard = () => {
           sub={`${formatCurrency(wonAmount)} em negócios fechados`}
           icon={<Trophy size={20} />}
           color="#10B981"
-          borderColor="#10B981"
         />
         <MetricCard
           title="Empresas Cadastradas"
@@ -94,19 +192,21 @@ const Dashboard = () => {
           sub="Na base de clientes"
           icon={<Building2 size={20} />}
           color="#6366F1"
-          borderColor="#6366F1"
         />
         <MetricCard
-          title="Tarefas Pendentes"
-          value={pendingTasks}
-          sub={`De ${tasks.length} total de tarefas`}
-          icon={<CheckSquare size={20} />}
+          title="Tempo Médio até a Venda"
+          value={avgDaysToClose !== null ? `${avgDaysToClose} dias` : '—'}
+          sub={
+            avgDaysToClose !== null
+              ? `Calculado sobre ${wonDeals.filter(d => d.dataCriacao && d.dataFechamento).length} negócio(s) fechado(s)`
+              : 'Sem negócios com data de fechamento'
+          }
+          icon={<Clock size={20} />}
           color="#F59E0B"
-          borderColor="#F59E0B"
         />
       </div>
 
-      {/* Gráfico CSS de barras */}
+      {/* ── Gráfico CSS de barras ── */}
       <div className="chart-card">
         <h3>Oportunidades por Etapa do Funil</h3>
         <div className="bar-chart">
@@ -131,11 +231,11 @@ const Dashboard = () => {
         </div>
       </div>
 
-      {/* Resumo rápido */}
+      {/* ── Resumo rápido ── */}
       <div className="summary-row">
         <div className="summary-card">
           <h4>Equipe Ativa</h4>
-          <div className="summary-value">{activeUsers} <span>/ {users.length} usuários</span></div>
+          <div className="summary-value">{activeUsers.length} <span>/ {users.length} usuários</span></div>
         </div>
         <div className="summary-card">
           <h4>Total de Negociações</h4>

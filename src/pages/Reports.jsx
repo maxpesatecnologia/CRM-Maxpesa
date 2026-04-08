@@ -39,11 +39,11 @@ const Reports = () => {
     contacts: {
       label: 'Empresas / Contatos',
       icon: <Users size={18} />,
-      headers: ['Empresa', 'CNPJ/CPF', 'Endereço', 'Cidade', 'UF', 'Telefone', 'E-mail', 'Segmento'],
+      headers: ['Empresa', 'CNPJ/CPF', 'Endereço', 'Cidade', 'UF', 'Telefone', 'Celular', 'E-mail', 'Segmento'],
       rows: () => contacts.map(c => [
         c.empresa, c.documento || '-',
         [c.endereco, c.bairro].filter(Boolean).join(', ') || '-',
-        c.cidade || '-', c.uf || '-', c.telefone || '-', c.email || '-', c.segmento || '-'
+        c.cidade || '-', c.uf || '-', c.telefone || '-', c.celular || '-', c.email || '-', c.segmento || '-'
       ])
     },
     tasks: {
@@ -151,6 +151,7 @@ const Reports = () => {
               cidade: row['Cidade'] || row['cidade'] || '',
               uf: row['UF'] || row['uf'] || '',
               telefone: row['Telefone'] || row['telefone'] || '',
+              celular: row['Celular'] || row['celular'] || row['CELULAR'] || '',
               email: row['E-mail'] || row['email'] || '',
               segmento: row['Segmento'] || row['segmento'] || '',
               bairro: row['Bairro'] || row['bairro'] || '',
@@ -183,8 +184,8 @@ const Reports = () => {
   // ────────────────── BAIXAR TEMPLATE ──────────────────
   const downloadTemplate = () => {
     const templates = {
-      contacts: [['Empresa', 'CNPJ/CPF', 'Endereço', 'Bairro', 'Cidade', 'UF', 'CEP', 'Telefone', 'Contato', 'E-mail', 'Segmento'],
-                 ['Empresa Exemplo LTDA', '00.000.000/0001-00', 'Rua das Flores, 100', 'Centro', 'São Paulo', 'SP', '01000-000', '(11) 90000-0000', 'João Silva', 'joao@exemplo.com', 'Indústria']],
+      contacts: [['Empresa', 'CNPJ/CPF', 'Endereço', 'Bairro', 'Cidade', 'UF', 'CEP', 'Telefone', 'Celular', 'Contato', 'E-mail', 'Segmento'],
+                 ['Empresa Exemplo LTDA', '00.000.000/0001-00', 'Rua das Flores, 100', 'Centro', 'São Paulo', 'SP', '01000-000', '(11) 3000-0000', '(11) 90000-0000', 'João Silva', 'joao@exemplo.com', 'Indústria']],
       deals: [['Empresa', 'Produto', 'Valor'],
               ['Empresa Exemplo', 'Guindaste 50T', '25000']]
     };
@@ -314,7 +315,7 @@ const Reports = () => {
               <li>O arquivo deve ser <strong>.xlsx</strong> ou <strong>.csv</strong></li>
               <li>A primeira linha deve conter o <strong>cabeçalho das colunas</strong></li>
               {importType === 'contacts' && <>
-                <li>Colunas esperadas: <code>Empresa</code>, <code>CNPJ/CPF</code>, <code>Cidade</code>, <code>UF</code>, <code>Telefone</code>, <code>E-mail</code>, <code>Segmento</code></li>
+                <li>Colunas esperadas: <code>Empresa</code>, <code>CNPJ/CPF</code>, <code>Cidade</code>, <code>UF</code>, <code>Telefone</code>, <code>Celular</code>, <code>E-mail</code>, <code>Segmento</code></li>
               </>}
               {importType === 'deals' && <>
                 <li>Colunas esperadas: <code>Empresa</code>, <code>Produto</code>, <code>Valor</code></li>

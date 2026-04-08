@@ -10,9 +10,11 @@ CREATE TABLE IF NOT EXISTS contacts (
   cep TEXT,
   uf TEXT,
   telefone TEXT,
+  celular TEXT,
   contatos TEXT,
   email TEXT,
-  segmento TEXT
+  segmento TEXT,
+  vendedor TEXT
 );
 
 -- 2. Tabela de Frota/Produtos
@@ -38,7 +40,8 @@ CREATE TABLE IF NOT EXISTS deals (
   motivoPerda TEXT,
   dataCriacao DATE DEFAULT CURRENT_DATE,
   dataFechamento DATE,
-  produto TEXT
+  produto TEXT,
+  vendedor TEXT
 );
 
 -- 4. Tabela de Tarefas
@@ -73,3 +76,35 @@ CREATE TABLE IF NOT EXISTS users_crm (
 -- ALTER TABLE deals DISABLE ROW LEVEL SECURITY;
 -- ALTER TABLE tasks DISABLE ROW LEVEL SECURITY;
 -- ALTER TABLE users_crm DISABLE ROW LEVEL SECURITY;
+
+-- 6. Tabela de Campanhas
+CREATE TABLE IF NOT EXISTS campaigns (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  nome TEXT NOT NULL,
+  descricao TEXT,
+  status TEXT DEFAULT 'Ativa',
+  dataInicio DATE,
+  dataFim DATE
+);
+
+-- 7. Tabela de Origens de Lead
+CREATE TABLE IF NOT EXISTS lead_sources (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  nome TEXT NOT NULL
+);
+
+-- 8. Tabela de Segmentos
+CREATE TABLE IF NOT EXISTS segments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  nome TEXT NOT NULL
+);
+
+-- 9. Tabela de Motivos de Perda
+CREATE TABLE IF NOT EXISTS loss_reasons (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  nome TEXT NOT NULL
+);

@@ -14,6 +14,12 @@
   
   --border-color: #E2E8F0;
   --column-bg: #EDF2F7; /* Fundo leve para as colunas do Kanban */
+  
+  /* Tema do Sidebar - Opção Profissional Dark */
+  --sidebar-bg: #1e293b; 
+  --sidebar-text: #94a3b8;
+  --sidebar-text-hover: #f1f5f9;
+  --sidebar-border: #334155;
 
   /* Cores Semânticas */
   --success-color: #38A169; /* Verde para ganho/vencemos */

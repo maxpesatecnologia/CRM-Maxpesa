@@ -28,6 +28,7 @@ const Tasks = () => {
   const [formData, setFormData] = useState({
     empresa: '',
     negociacao: '',
+    valor: '',
     assunto: '',
     descricao: '',
     vendedor: '',
@@ -43,6 +44,7 @@ const Tasks = () => {
       setFormData({
         empresa: task.empresa || '',
         negociacao: task.negociacao || '',
+        valor: task.valor || '',
         assunto: task.assunto || '',
         descricao: task.descricao || '',
         vendedor: task.vendedor || '',
@@ -56,6 +58,7 @@ const Tasks = () => {
       setFormData({
         empresa: '',
         negociacao: '',
+        valor: '',
         assunto: '',
         descricao: '',
         vendedor: '',
@@ -85,12 +88,20 @@ const Tasks = () => {
     e.preventDefault();
     if (!formData.assunto || !formData.dataAgendamento) return;
 
-    // Monta o campo titulo para compatibilidade com a listagem
+    // Campos mapeados para os nomes exatos que a tabela tasks aceita
+    // toDbTask() no CRMContext converte tipoTarefa→tipotarefa e dataAgendamento→dataagendamento
     const payload = {
-      ...formData,
-      titulo: formData.assunto,
-      dataHora: `${formData.dataAgendamento}T${formData.horario || '00:00'}`,
-      responsaveis: formData.vendedor
+      titulo:          formData.assunto,
+      assunto:         formData.assunto,
+      descricao:       formData.descricao,
+      empresa:         formData.empresa,
+      negociacao:      formData.negociacao,
+      valor:           Number(formData.valor) || 0,
+      vendedor:        formData.vendedor,
+      tipoTarefa:      formData.tipoTarefa,
+      dataAgendamento: formData.dataAgendamento,
+      horario:         formData.horario || '00:00',
+      concluida:       formData.concluida,
     };
 
     if (editingId) {
@@ -309,12 +320,12 @@ const Tasks = () => {
                     </td>
                     <td>
                       <div className="deal-info-cell">
-                        <span className="deal-name">{task.negociacao || 'Sem produto'}</span>
+                        <span className="deal-name">{task.negociacao || '—'}</span>
                         <span className="deal-company">{task.empresa}</span>
                       </div>
                     </td>
                     <td className="text-sm font-medium">
-                      {relatedDeal ? formatCurrency(relatedDeal.valorUnico) : '-'}
+                      {task.valor ? formatCurrency(Number(task.valor)) : '-'}
                     </td>
                     <td className="center-col">
                        <button className="btn-icon" title="Detalhes / Editar" onClick={() => handleOpenModal(task)}>
@@ -369,15 +380,27 @@ const Tasks = () => {
                 </div>
 
                 <div className="form-group flex-1">
-                  <label>Negociação / Produto *</label>
+                  <label>Negociação</label>
                   <input
                     type="text"
                     value={formData.negociacao}
                     onChange={(e) => setFormData({...formData, negociacao: e.target.value})}
-                    placeholder="Escreva o produto ou negociação..."
-                    required
+                    placeholder="Ex: Aluguel de guindaste para obra ABC"
                   />
                 </div>
+              </div>
+
+              {/* VALOR DA NEGOCIAÇÃO */}
+              <div className="form-group">
+                <label>Valor da Negociação (R$) — opcional</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={formData.valor}
+                  onChange={(e) => setFormData({...formData, valor: e.target.value})}
+                  placeholder="0,00"
+                />
               </div>
 
               {/* LINHA 2: Assunto da Tarefa */}

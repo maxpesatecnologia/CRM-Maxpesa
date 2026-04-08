@@ -29,7 +29,7 @@ const Fleet = () => {
         nome: item.nome,
         descricao: item.descricao || '',
         valor: item.valor,
-        exibirNaNegociacao: item.exibirNaNegociacao !== undefined ? item.exibirNaNegociacao : true
+        exibirNaNegociacao: item.exibirnanegociacao !== undefined ? item.exibirnanegociacao : true
       });
     } else {
       setEditingId(null);
@@ -53,8 +53,10 @@ const Fleet = () => {
     if (!formData.nome) return;
 
     const savedData = {
-      ...formData,
-      valor: Number(formData.valor) || 0
+      nome: formData.nome,
+      descricao: formData.descricao,
+      valor: Number(formData.valor) || 0,
+      exibirnanegociacao: formData.exibirNaNegociacao
     };
 
     if (editingId) {
@@ -121,7 +123,7 @@ const Fleet = () => {
                   </td>
                   <td className="fleet-price font-medium">{formatCurrency(item.valor)}</td>
                   <td>
-                    {item.exibirNaNegociacao ? (
+                    {item.exibirnanegociacao ? (
                       <span className="badge badge-active">Ativo nas negociações</span>
                     ) : (
                       <span className="badge badge-inactive">Oculto</span>

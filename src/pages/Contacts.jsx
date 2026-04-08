@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useCRM } from '../context/CRMContext';
-import { Plus, Search, Building2, MapPin, Phone, Mail, X, Briefcase, ListTodo, Calendar, DollarSign, Info } from 'lucide-react';
+import { Plus, Search, Building2, MapPin, Phone, Mail, X, Briefcase, ListTodo, Calendar, DollarSign, Info, Target, Share2, Paperclip } from 'lucide-react';
 import './Contacts.css';
 import './CompanyDetails.css';
 
 const Contacts = () => {
-  const { contacts, addContact, deals, tasks, stages } = useCRM();
+  const { contacts, addContact, updateContact, deleteContact, deals, tasks, stages, segments, users } = useCRM();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
@@ -14,15 +14,35 @@ const Contacts = () => {
   const [activeDetailTab, setActiveDetailTab] = useState('dados'); // 'dados', 'vendas', 'atividades'
 
   const [form, setForm] = useState({
-    empresa: '', documento: '', endereco: '', bairro: '', cidade: '', cep: '', uf: '', telefone: '', contatos: '', email: '', segmento: ''
+    empresa: '', documento: '', endereco: '', bairro: '', cidade: '', cep: '', uf: '', telefone: '', celular: '', contatos: '', email: '', segmento: '', vendedor: ''
   });
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!form.empresa) return;
-    addContact(form);
+    
+    if (form.id) {
+      const { id, ...updatedFields } = form;
+      updateContact(id, updatedFields);
+    } else {
+      addContact(form);
+    }
+    
     setIsModalOpen(false);
-    setForm({ empresa: '', documento: '', endereco: '', bairro: '', cidade: '', cep: '', uf: '', telefone: '', contatos: '', email: '', segmento: '' });
+    setForm({ empresa: '', documento: '', endereco: '', bairro: '', cidade: '', cep: '', uf: '', telefone: '', celular: '', contatos: '', email: '', segmento: '', vendedor: '' });
+  };
+
+  const handleEdit = (contact) => {
+    setForm(contact);
+    setIsModalOpen(true);
+    setViewingContact(null);
+  };
+
+  const handleDelete = (id) => {
+    if (window.confirm('Tem certeza que deseja excluir esta empresa? Todas as negociações e tarefas manterão a referência de texto, mas o cadastro sumirá.')) {
+      deleteContact(id);
+      setViewingContact(null);
+    }
   };
 
   const filteredContacts = contacts.filter(c => 
@@ -70,7 +90,7 @@ const Contacts = () => {
               <th>Nome da Empresa</th>
               <th>CNPJ / CPF</th>
               <th>Endereço</th>
-              <th>Telefone</th>
+              <th>Telefone / Celular</th>
               <th>Pessoa de Contato</th>
               <th>E-mail</th>
               <th>Segmento</th>
@@ -96,9 +116,11 @@ const Contacts = () => {
                   </span>
                 </td>
                 <td>
-                  <span className="flex items-center gap-1 text-muted">
-                    {contact.telefone ? <><Phone size={14} /> {contact.telefone}</> : '-'}
-                  </span>
+                  <div className="flex flex-col gap-1 text-muted">
+                    {contact.telefone && <span className="flex items-center gap-1"><Phone size={12} /> {contact.telefone}</span>}
+                    {contact.celular && <span className="flex items-center gap-1 font-medium" style={{color: 'var(--primary-color)'}}><Phone size={12} /> {contact.celular}</span>}
+                    {!contact.telefone && !contact.celular && '-'}
+                  </div>
                 </td>
                 <td>{contact.contatos || '-'}</td>
                 <td>
@@ -184,8 +206,11 @@ const Contacts = () => {
                     <span className="flex items-center gap-2"><Mail size={14}/> {viewingContact.email || '-'}</span>
                   </div>
                   <div className="info-item">
-                    <label>Telefone</label>
-                    <span className="flex items-center gap-2"><Phone size={14}/> {viewingContact.telefone || '-'}</span>
+                    <label>Telefone / Celular</label>
+                    <div className="flex flex-col gap-1">
+                      <span className="flex items-center gap-2"><Phone size={14}/> {viewingContact.telefone || '-'}</span>
+                      {viewingContact.celular && <span className="flex items-center gap-2 font-medium" style={{color: 'var(--primary-color)'}}><Phone size={14}/> {viewingContact.celular} (Celular)</span>}
+                    </div>
                   </div>
                   <div className="info-item">
                     <label>Segmento</label>
@@ -205,10 +230,12 @@ const Contacts = () => {
                   {contactDeals.length > 0 ? contactDeals.map(deal => (
                     <div key={deal.id} className="list-item">
                       <div className="item-main-info">
-                        <h4>{deal.empresa}</h4>
+                        <h4>{deal.nomeNegocacao || deal.empresa}</h4>
                         <div className="item-sub-info">
                           <span className="flex items-center gap-1"><Calendar size={12}/> {deal.dataCriacao}</span>
-                          <span className="flex items-center gap-1"><Info size={12}/> {deal.produto || 'N/A'}</span>
+                          <span className="flex items-center gap-1" title="Equipamento"><Info size={12}/> {deal.produto || 'N/A'}</span>
+                          {deal.campanha && <span className="flex items-center gap-1"><Target size={12} style={{ marginLeft: '8px' }}/> {deal.campanha}</span>}
+                          {deal.fonte && <span className="flex items-center gap-1"><Share2 size={12} style={{ marginLeft: '8px' }}/> {deal.fonte}</span>}
                         </div>
                       </div>
                       <div style={{ textAlign: 'right' }}>
@@ -216,6 +243,30 @@ const Contacts = () => {
                         <span className={`status-badge ${deal.etapaId === 'etapa-7' ? 'perda' : deal.etapaId === 'etapa-8' ? 'ganho' : 'andamento'}`}>
                           {getStageTitle(deal.etapaId)}
                         </span>
+                        {deal.anexo && (
+                          <div style={{ marginTop: '8px' }}>
+                            <a 
+                              href={deal.anexo} 
+                              download={deal.anexoNome || 'proposta.pdf'}
+                              onClick={(e) => e.stopPropagation()}
+                              style={{ 
+                                display: 'inline-flex', 
+                                alignItems: 'center', 
+                                gap: '4px', 
+                                fontSize: '0.7rem', 
+                                color: 'var(--primary-color)', 
+                                textDecoration: 'none',
+                                fontWeight: 500,
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                border: '1px solid var(--primary-color)',
+                                backgroundColor: 'white'
+                              }}
+                            >
+                              <Paperclip size={12} /> Ver Proposta
+                            </a>
+                          </div>
+                        )}
                       </div>
                     </div>
                   )) : (
@@ -252,13 +303,30 @@ const Contacts = () => {
               )}
             </div>
 
-            <div className="modal-footer" style={{ borderTop: '1px solid var(--border-color)', padding: '1rem 1.5rem', backgroundColor: 'white' }}>
+            <div className="modal-footer" style={{ borderTop: '1px solid var(--border-color)', padding: '1rem 1.5rem', backgroundColor: 'white', display: 'flex', justifyContent: 'space-between' }}>
+              <div>
+                <button 
+                  type="button" 
+                  className="btn-danger" 
+                  onClick={() => handleDelete(viewingContact.id)}
+                  style={{ backgroundColor: '#fee2e2', color: '#b91c1c', border: 'none', padding: '0.5rem 1rem', borderRadius: '4px', cursor: 'pointer', marginRight: '8px' }}
+                >
+                  Excluir
+                </button>
+                <button 
+                  type="button" 
+                  className="btn-secondary" 
+                  onClick={() => handleEdit(viewingContact)}
+                >
+                  Editar
+                </button>
+              </div>
               <button 
                 type="button" 
-                className="btn-secondary" 
+                className="btn-primary" 
                 onClick={() => setViewingContact(null)}
               >
-                Fechar Visualização
+                Fechar
               </button>
             </div>
           </div>
@@ -270,8 +338,11 @@ const Contacts = () => {
         <div className="modal-overlay">
           <div className="modal-content" style={{ maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', zIndex: 1100 }}>
             <div className="modal-header">
-              <h2>Nova Empresa</h2>
-              <button onClick={() => setIsModalOpen(false)} style={{background:'none', border:'none', cursor:'pointer'}}><X size={24}/></button>
+              <h2>{form.id ? 'Editar Empresa' : 'Nova Empresa'}</h2>
+              <button onClick={() => {
+                setIsModalOpen(false);
+                setForm({ empresa: '', documento: '', endereco: '', bairro: '', cidade: '', cep: '', uf: '', telefone: '', celular: '', contatos: '', email: '', segmento: '', vendedor: '' });
+              }} style={{background:'none', border:'none', cursor:'pointer'}}><X size={24}/></button>
             </div>
             
             <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
@@ -290,13 +361,20 @@ const Contacts = () => {
                 <label>Segmento</label>
                 <select value={form.segmento} onChange={e => setForm({...form, segmento: e.target.value})}>
                   <option value="">Selecione...</option>
-                  <option value="Tecnologia">Tecnologia</option>
-                  <option value="Indústria">Indústria</option>
-                  <option value="Serviços">Serviços</option>
-                  <option value="Varejo">Varejo</option>
-                  <option value="Saúde">Saúde</option>
-                  <option value="Educação">Educação</option>
+                  {segments.map(seg => (
+                    <option key={seg.id} value={seg.nome}>{seg.nome}</option>
+                  ))}
                   <option value="Outros">Outros</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label>Vendedor Responsável</label>
+                <select value={form.vendedor || ''} onChange={e => setForm({...form, vendedor: e.target.value})}>
+                  <option value="">Selecione um vendedor...</option>
+                  {users.filter(u => u.status === 'Ativo').map(u => (
+                    <option key={u.id} value={u.nome}>{u.nome}</option>
+                  ))}
                 </select>
               </div>
 
@@ -342,8 +420,13 @@ const Contacts = () => {
               </div>
 
               <div className="form-group">
-                <label>Telefone / WhatsApp</label>
-                <input type="text" value={form.telefone} onChange={e => setForm({...form, telefone: e.target.value})} placeholder="(11) 90000-0000" />
+                <label>Telefone Fixo</label>
+                <input type="text" value={form.telefone} onChange={e => setForm({...form, telefone: e.target.value})} placeholder="(11) 3000-0000" />
+              </div>
+
+              <div className="form-group">
+                <label>Celular / WhatsApp</label>
+                <input type="text" value={form.celular} onChange={e => setForm({...form, celular: e.target.value})} placeholder="(11) 90000-0000" />
               </div>
 
               <div className="form-group" style={{ gridColumn: 'span 2' }}>
@@ -352,8 +435,11 @@ const Contacts = () => {
               </div>
 
               <div className="modal-footer" style={{ gridColumn: 'span 2', marginTop: '1rem' }}>
-                <button type="button" className="btn-secondary" onClick={() => setIsModalOpen(false)}>Cancelar</button>
-                <button type="submit" className="btn-primary">Salvar Empresa</button>
+                <button type="button" className="btn-secondary" onClick={() => {
+                  setIsModalOpen(false);
+                  setForm({ empresa: '', documento: '', endereco: '', bairro: '', cidade: '', cep: '', uf: '', telefone: '', celular: '', contatos: '', email: '', segmento: '', vendedor: '' });
+                }}>Cancelar</button>
+                <button type="submit" className="btn-primary">{form.id ? 'Salvar Alterações' : 'Salvar Empresa'}</button>
               </div>
             </form>
 

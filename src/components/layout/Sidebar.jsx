@@ -1,42 +1,30 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Columns3, Users as UsersIcon, Settings, ChevronLeft, ChevronRight, Menu, Truck, CheckSquare, UserCircle2, BarChart2 } from 'lucide-react';
+import { LayoutDashboard, Columns3, Users as UsersIcon, Settings, ChevronLeft, ChevronRight, Menu, Truck, CheckSquare, UserCircle2, BarChart2, Megaphone, Share2, Tags, XSquare } from 'lucide-react';
 import './layout.css';
 
 const Sidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   return (
     <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
-      <div className="sidebar-header" style={{ padding: '0.5rem 1rem', height: '80px', alignItems: 'center' }}>
+      <div className="sidebar-header">
         {!collapsed && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-            <div style={{ 
-              backgroundColor: '#FF2A2A', 
-              borderRadius: '8px', 
-              width: '32px', 
-              height: '32px', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center',
-              boxShadow: 'var(--shadow-sm)'
-            }}>
-              <strong style={{ color: 'white', fontSize: '20px', lineHeight: 1, fontFamily: 'Arial, sans-serif' }}>M</strong>
+          <div className="sidebar-brand">
+            <div className="brand-logo">
+              <strong>M</strong>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', marginTop: '2px' }}>
-              <div style={{ display: 'flex', fontWeight: 800, fontSize: '18px', letterSpacing: '0.5px', lineHeight: 1 }}>
-                <span style={{ color: '#FF2A2A' }}>MAXPESA</span>
+            <div className="brand-text">
+              <div className="brand-name">
+                <span>MAXPESA</span>
               </div>
-              <span style={{ color: '#718096', fontSize: '9px', fontWeight: 600, marginTop: '2px', letterSpacing: '0.2px' }}>
-                LOCAÇÃO DE GUINDASTE
-              </span>
-              <span style={{ color: '#FF2A2A', fontSize: '10px', fontWeight: 800, marginTop: '1px', letterSpacing: '1px' }}>
-                CRM
-              </span>
+              <span className="brand-subtext">LOCAÇÃO DE GUINDASTE</span>
+              <span className="brand-suffix">CRM</span>
             </div>
           </div>
         )}
-        <button className="toggle-btn" onClick={() => setCollapsed(!collapsed)} style={{ marginLeft: collapsed ? 0 : 'auto' }}>
+        <button className="toggle-btn" onClick={() => setCollapsed(!collapsed)}>
           {collapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
         </button>
       </div>
@@ -62,16 +50,6 @@ const Sidebar = () => {
           <span className="nav-text">Tarefas</span>
         </NavLink>
 
-        <NavLink to="/frota" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
-          <Truck size={20} className="nav-icon" />
-          <span className="nav-text">Produtos/Frota</span>
-        </NavLink>
-
-        <NavLink to="/usuarios" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
-          <UserCircle2 size={20} className="nav-icon" />
-          <span className="nav-text">Usuários</span>
-        </NavLink>
-
         <NavLink to="/relatorios" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
           <BarChart2 size={20} className="nav-icon" />
           <span className="nav-text">Relatórios</span>
@@ -79,10 +57,49 @@ const Sidebar = () => {
       </div>
       
       <div className="sidebar-footer" style={{ marginTop: 'auto', padding: '1rem 0' }}>
-         <NavLink to="/settings" className="nav-item">
-          <Settings size={20} className="nav-icon" />
-          <span className="nav-text">Configurações</span>
-        </NavLink>
+         <div style={{ display: 'flex', flexDirection: 'column' }}>
+           <button 
+             className="nav-item"
+             style={{ background: 'transparent', border: 'none', cursor: 'pointer', textAlign: 'left', width: 'calc(100% - 1.5rem)' }}
+             onClick={() => {
+               setSettingsOpen(!settingsOpen);
+               if (collapsed) setCollapsed(false);
+             }}
+           >
+             <Settings size={20} className="nav-icon" />
+             {!collapsed && <span className="nav-text">Configurações</span>}
+             {!collapsed && <ChevronRight size={16} style={{ marginLeft: 'auto', transform: settingsOpen ? 'rotate(90deg)' : 'none', transition: '0.2s' }} />}
+           </button>
+           
+           {settingsOpen && !collapsed && (
+             <div style={{ display: 'flex', flexDirection: 'column', backgroundColor: 'rgba(0,0,0,0.1)', borderRadius: '8px', margin: '0 0.75rem', overflow: 'hidden' }}>
+               <NavLink to="/frota" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} style={{ margin: '0', borderRadius: '0', padding: '0.6rem 1rem 0.6rem 2.5rem' }}>
+                 <Truck size={16} className="nav-icon" style={{ marginRight: '0.75rem' }} />
+                 <span className="nav-text" style={{ fontSize: '0.85rem' }}>Produtos/Frota</span>
+               </NavLink>
+               <NavLink to="/campanhas" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} style={{ margin: '0', borderRadius: '0', padding: '0.6rem 1rem 0.6rem 2.5rem' }}>
+                 <Megaphone size={16} className="nav-icon" style={{ marginRight: '0.75rem' }} />
+                 <span className="nav-text" style={{ fontSize: '0.85rem' }}>Campanhas</span>
+               </NavLink>
+               <NavLink to="/fontes" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} style={{ margin: '0', borderRadius: '0', padding: '0.6rem 1rem 0.6rem 2.5rem' }}>
+                 <Share2 size={16} className="nav-icon" style={{ marginRight: '0.75rem' }} />
+                 <span className="nav-text" style={{ fontSize: '0.85rem' }}>Fontes de Lead</span>
+               </NavLink>
+               <NavLink to="/segmentos" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} style={{ margin: '0', borderRadius: '0', padding: '0.6rem 1rem 0.6rem 2.5rem' }}>
+                 <Tags size={16} className="nav-icon" style={{ marginRight: '0.75rem' }} />
+                 <span className="nav-text" style={{ fontSize: '0.85rem' }}>Segmentos</span>
+               </NavLink>
+               <NavLink to="/motivos-perda" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} style={{ margin: '0', borderRadius: '0', padding: '0.6rem 1rem 0.6rem 2.5rem' }}>
+                 <XSquare size={16} className="nav-icon" style={{ marginRight: '0.75rem' }} />
+                 <span className="nav-text" style={{ fontSize: '0.85rem' }}>Motivos de Perda</span>
+               </NavLink>
+               <NavLink to="/usuarios" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} style={{ margin: '0', borderRadius: '0', padding: '0.6rem 1rem 0.6rem 2.5rem' }}>
+                 <UserCircle2 size={16} className="nav-icon" style={{ marginRight: '0.75rem' }} />
+                 <span className="nav-text" style={{ fontSize: '0.85rem' }}>Usuários</span>
+               </NavLink>
+             </div>
+           )}
+         </div>
       </div>
     </div>
   );
