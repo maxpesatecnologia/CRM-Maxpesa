@@ -93,7 +93,7 @@ const DealCard = ({ deal, onEdit, onDelete }) => {
 
       {isLost && deal.motivoPerda && (
         <div style={{ fontSize: '0.7rem', color: 'var(--danger-color)', marginTop: '0.25rem', backgroundColor: '#fef2f2', padding: '2px 4px', borderRadius: '4px' }}>
-          Motivo: {deal.motivoPerda}
+          Motivo: {deal.motivoPerda.toUpperCase()}
         </div>
       )}
 
@@ -516,7 +516,7 @@ const Pipeline = () => {
                     >
                       <option value="">Selecione o motivo...</option>
                       {lossReasons.map(r => (
-                        <option key={r.id} value={r.nome}>{r.nome}</option>
+                        <option key={r.id} value={r.nome}>{r.nome.toUpperCase()}</option>
                       ))}
                     </select>
                   </div>
@@ -612,7 +612,7 @@ const Pipeline = () => {
               >
                 <option value="">-- Escolha --</option>
                 {lossReasons.map(reason => (
-                  <option key={reason.id} value={reason.nome}>{reason.nome}</option>
+                  <option key={reason.id} value={reason.nome}>{reason.nome.toUpperCase()}</option>
                 ))}
               </select>
             </div>

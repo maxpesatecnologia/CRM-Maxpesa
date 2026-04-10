@@ -5,7 +5,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
   FileDown, FileUp, FileText, FileSpreadsheet, Table2,
-  CheckCircle2, AlertCircle, Users, Briefcase, ListTodo, Truck
+  CheckCircle2, AlertCircle, Users, Briefcase, ListTodo, Truck, Globe
 } from 'lucide-react';
 import './Reports.css';
 
@@ -28,12 +28,22 @@ const Reports = () => {
     deals: {
       label: 'Negociações (Funil)',
       icon: <Briefcase size={18} />,
-      headers: ['Empresa', 'Produto', 'Valor', 'Etapa', 'Data Criação'],
+      headers: [
+        'Empresa', 'Etapa', 'Motivo da Perda', 'Valor Único', 'Valor Recorrente', 
+        'Data de Criação', 'Data de Fechamento', 'Fonte', 'Campanha', 'Vendedor', 'Produto'
+      ],
       rows: () => deals.map(d => [
-        d.empresa, d.produto || '-',
-        formatCurrency(d.valorUnico),
+        d.empresa, 
         getStageTitle(d.etapaId),
-        d.dataCriacao || '-'
+        (d.motivoPerda || d.motivoperda || '-').toUpperCase(),
+        formatCurrency(d.valorUnico),
+        formatCurrency(d.valorRecorrente),
+        d.dataCriacao || d.datacriacao || '-',
+        d.dataFechamento || d.datafechamento || '-',
+        d.fonte || '-',
+        d.campanha || '-',
+        d.vendedor || '-',
+        d.produto || '-'
       ])
     },
     contacts: {
@@ -120,6 +130,215 @@ const Reports = () => {
     });
 
     doc.save(`${exportType}_${today()}.pdf`);
+  };
+
+  // ────────────────── EXPORTAR HTML ──────────────────
+  const exportHTML = () => {
+    const cfg = exportConfigs[exportType];
+    const rows = cfg.rows();
+    const title = `Relatório — ${cfg.label}`;
+    
+    // Cálculo de totais para o resumo
+    let totalUnico = 0;
+    let totalRecorrente = 0;
+    
+    if (exportType === 'deals') {
+      deals.forEach(d => {
+        totalUnico += Number(d.valorUnico || 0);
+        totalRecorrente += Number(d.valorRecorrente || 0);
+      });
+    }
+
+    const htmlContent = `
+      <!DOCTYPE html>
+      <html lang="pt-BR">
+      <head>
+        <meta charset="UTF-8">
+        <title>${title}</title>
+        <style>
+          @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
+          
+          body { 
+            font-family: 'Inter', sans-serif; 
+            margin: 0; 
+            padding: 40px; 
+            color: #1e293b;
+            background-color: #f8fafc;
+          }
+          
+          .report-container {
+            width: 100%;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+            overflow-x: auto;
+            box-sizing: border-box;
+          }
+
+          .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            border-bottom: 2px solid #f1f5f9;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+          }
+
+          .logo-area h1 {
+            color: #ef4444;
+            margin: 0;
+            font-size: 24px;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+          }
+
+          .logo-area p {
+            color: #64748b;
+            margin: 4px 0 0 0;
+            font-size: 14px;
+          }
+
+          .date-area {
+            text-align: right;
+            color: #64748b;
+            font-size: 13px;
+          }
+
+          .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+          }
+
+          .summary-card {
+            background: #f8fafc;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+          }
+
+          .summary-card label {
+            display: block;
+            font-size: 12px;
+            color: #64748b;
+            text-transform: uppercase;
+            font-weight: 600;
+            margin-bottom: 4px;
+          }
+
+          .summary-card .value {
+            font-size: 18px;
+            font-weight: 700;
+            color: #0f172a;
+          }
+
+          table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            min-width: 1500px;
+          }
+
+          th {
+            background-color: #f1f5f9;
+            color: #475569;
+            text-align: left;
+            padding: 12px 10px;
+            font-weight: 600;
+            border-bottom: 2px solid #e2e8f0;
+          }
+
+          td {
+            padding: 10px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #334155;
+          }
+
+          tr:nth-child(even) { background-color: #fbfcfd; }
+          
+          .no-print {
+            margin-bottom: 20px;
+            text-align: right;
+          }
+
+          .btn-print {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+          }
+
+          .btn-print:hover { background: #dc2626; }
+
+          @media print {
+            .no-print { display: none; }
+            body { padding: 0; background: white; }
+            .report-container { box-shadow: none; padding: 0; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="no-print">
+          <button class="btn-print" onclick="window.print()">Imprimir / Salvar PDF</button>
+        </div>
+
+        <div class="report-container">
+          <div class="header">
+            <div class="logo-area">
+              <h1>MAXPESA CRM</h1>
+              <p>${cfg.label}</p>
+            </div>
+            <div class="date-area">
+              Gerado em: ${new Date().toLocaleDateString('pt-BR')} às ${new Date().toLocaleTimeString('pt-BR')}
+            </div>
+          </div>
+
+          <div class="summary-grid">
+            <div class="summary-card">
+              <label>Total de Registros</label>
+              <div class="value">${rows.length}</div>
+            </div>
+            ${exportType === 'deals' ? `
+              <div class="summary-card">
+                <label>Valor Total Único</label>
+                <div class="value">${formatCurrency(totalUnico)}</div>
+              </div>
+              <div class="summary-card">
+                <label>Valor Total Recorrente</label>
+                <div class="value">${formatCurrency(totalRecorrente)}</div>
+              </div>
+            ` : ''}
+          </div>
+
+          <table>
+            <thead>
+              <tr>${cfg.headers.map(h => `<th>${h}</th>`).join('')}</tr>
+            </thead>
+            <tbody>
+              ${rows.map(row => `
+                <tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>
+              `).join('')}
+            </tbody>
+          </table>
+          
+          <div style="margin-top: 40px; text-align: center; color: #94a3b8; font-size: 11px;">
+            Relatório gerado automaticamente pelo sistema MAXPESA CRM
+          </div>
+        </div>
+      </body>
+      </html>
+    `;
+
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(htmlContent);
+    printWindow.document.close();
   };
 
   // ────────────────── IMPORTAR ARQUIVO ──────────────────
@@ -256,6 +475,9 @@ const Reports = () => {
             </button>
             <button className="export-btn csv" onClick={exportCSV}>
               <Table2 size={18} /> Exportar CSV
+            </button>
+            <button className="export-btn html" onClick={exportHTML}>
+              <Globe size={18} /> Exportar HTML
             </button>
           </div>
 

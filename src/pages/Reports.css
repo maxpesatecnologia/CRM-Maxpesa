@@ -19,18 +19,13 @@
   margin: 0;
 }
 
-/* Grid dos dois cards lado a lado */
 .reports-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: 1fr;
   gap: 1.5rem;
 }
 
-@media (max-width: 1000px) {
-  .reports-grid {
-    grid-template-columns: 1fr;
-  }
-}
+
 
 /* Card base */
 .reports-card {
@@ -168,6 +163,7 @@
 .export-btn.pdf   { background: #FF2A2A; color: white; }
 .export-btn.excel { background: #16A34A; color: white; }
 .export-btn.csv   { background: #0EA5E9; color: white; }
+.export-btn.html  { background: #6366F1; color: white; }
 
 /* Preview da tabela */
 .preview-table {

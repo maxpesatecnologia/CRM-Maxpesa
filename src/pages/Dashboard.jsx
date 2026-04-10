@@ -62,13 +62,19 @@ const Dashboard = () => {
     return Math.round(totalDays / closed.length);
   }, [wonDeals]);
 
-  // Distribuição por etapa para o gráfico
-  const stageData = stages.map(stage => ({
-    name:   stage.title,
-    count:  filteredDeals.filter(d => d.etapaId === stage.id).length,
-    isWon:  stage.id === 'etapa-8',
-    isLost: stage.id === 'etapa-7',
-  }));
+  // ── Base do Cálculo de Conversão (Somente Etapa "Lead Gerado") ──
+  const conversionBase = filteredDeals.filter(d => d.etapaId === 'etapa-1').length;
+
+  const stageData = stages.map(stage => {
+    const count = filteredDeals.filter(d => d.etapaId === stage.id).length;
+    return {
+      name:   stage.title,
+      count:  count,
+      conversion: conversionBase > 0 ? ((count / conversionBase) * 100).toFixed(1) : 0,
+      isWon:  stage.id === 'etapa-8',
+      isLost: stage.id === 'etapa-7',
+    };
+  });
   const maxCount = Math.max(...stageData.map(s => s.count), 1);
 
   const formatCurrency = (v) =>
@@ -206,6 +212,27 @@ const Dashboard = () => {
         />
       </div>
 
+      {/* ── Taxas de Conversão por Etapa ── */}
+      <div className="conversion-section">
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <h3 className="section-title">Eficiência (Sobre {conversionBase} Leads Gerados)</h3>
+          <span className="text-muted" style={{ fontSize: '0.75rem' }}>Cálculo: Etapa / Leads Gerados</span>
+        </div>
+        <div className="conversion-grid">
+          {stageData.map((stage, i) => (
+            <div key={i} className={`conversion-mini-card ${stage.isWon ? 'won' : stage.isLost ? 'lost' : ''}`}>
+              <div className="mini-card-label">{stage.name}</div>
+              <div className="mini-card-value">
+                {stage.conversion}%
+              </div>
+              <div className="mini-card-bar">
+                <div className="mini-card-fill" style={{ width: `${stage.conversion}%` }} />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* ── Gráfico CSS de barras ── */}
       <div className="chart-card">
         <h3>Oportunidades por Etapa do Funil</h3>
@@ -244,7 +271,7 @@ const Dashboard = () => {
         <div className="summary-card">
           <h4>Taxa de Conversão</h4>
           <div className="summary-value">
-            {totalDeals > 0 ? ((wonDeals.length / totalDeals) * 100).toFixed(1) : 0}%
+            {conversionBase > 0 ? ((wonDeals.length / conversionBase) * 100).toFixed(1) : 0}%
           </div>
         </div>
         <div className="summary-card">

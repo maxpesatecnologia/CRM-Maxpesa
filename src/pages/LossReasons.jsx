@@ -33,10 +33,12 @@ const LossReasons = () => {
     e.preventDefault();
     if (!formData.nome) return;
 
+    const dataToSave = { ...formData, nome: formData.nome.toUpperCase() };
+
     if (editingId) {
-      updateLossReason(editingId, formData);
+      updateLossReason(editingId, dataToSave);
     } else {
-      addLossReason(formData);
+      addLossReason(dataToSave);
     }
     handleCloseModal();
   };
@@ -92,7 +94,7 @@ const LossReasons = () => {
                       <div className="source-icon-mini" style={{ backgroundColor: '#fee2e2', color: '#dc2626' }}>
                         <XSquare size={14} />
                       </div>
-                      <span>{reason.nome}</span>
+                      <span>{reason.nome.toUpperCase()}</span>
                     </div>
                   </td>
                   <td>
