@@ -10,10 +10,11 @@ import {
 import './Reports.css';
 
 const Reports = () => {
-  const { deals, contacts, tasks, users, fleet, stages, addContact, addDeal } = useCRM();
+  const { deals, contacts, tasks, users, fleet, stages, bulkAddContacts, bulkAddDeals } = useCRM();
   const fileInputRef = useRef(null);
 
   const [importResult, setImportResult] = useState(null); // { success, count, error }
+  const [isImporting, setIsImporting] = useState(false);
   const [importType, setImportType] = useState('contacts');
   const [exportType, setExportType] = useState('deals');
 
@@ -346,9 +347,10 @@ const Reports = () => {
     const file = e.target.files[0];
     if (!file) return;
     setImportResult(null);
+    setIsImporting(true);
 
     const reader = new FileReader();
-    reader.onload = (evt) => {
+    reader.onload = async (evt) => {
       try {
         const data = new Uint8Array(evt.target.result);
         const workbook = XLSX.read(data, { type: 'array' });
@@ -357,43 +359,43 @@ const Reports = () => {
 
         if (!json.length) {
           setImportResult({ success: false, error: 'Arquivo vazio ou sem dados reconhecidos.' });
+          setIsImporting(false);
           return;
         }
 
-        let count = 0;
+        let result;
         if (importType === 'contacts') {
-          json.forEach(row => {
-            addContact({
-              empresa: row['Empresa'] || row['empresa'] || row['EMPRESA'] || '',
-              documento: row['CNPJ/CPF'] || row['documento'] || '',
-              endereco: row['Endereço'] || row['endereco'] || '',
-              cidade: row['Cidade'] || row['cidade'] || '',
-              uf: row['UF'] || row['uf'] || '',
-              telefone: row['Telefone'] || row['telefone'] || '',
-              celular: row['Celular'] || row['celular'] || row['CELULAR'] || '',
-              email: row['E-mail'] || row['email'] || '',
-              segmento: row['Segmento'] || row['segmento'] || '',
-              bairro: row['Bairro'] || row['bairro'] || '',
-              cep: row['CEP'] || row['cep'] || '',
-              contatos: row['Contato'] || row['contatos'] || ''
-            });
-            count++;
-          });
+          const contactsToImport = json.map(row => ({
+            empresa: row['Empresa'] || row['empresa'] || row['EMPRESA'] || '',
+            documento: row['CNPJ/CPF'] || row['documento'] || '',
+            endereco: row['Endereço'] || row['endereco'] || '',
+            cidade: row['Cidade'] || row['cidade'] || '',
+            uf: row['UF'] || row['uf'] || '',
+            telefone: row['Telefone'] || row['telefone'] || '',
+            celular: row['Celular'] || row['celular'] || row['CELULAR'] || '',
+            email: row['E-mail'] || row['email'] || '',
+            segmento: row['Segmento'] || row['segmento'] || '',
+            bairro: row['Bairro'] || row['bairro'] || '',
+            cep: row['CEP'] || row['cep'] || '',
+            contatos: row['Contato'] || row['contatos'] || ''
+          }));
+          result = await bulkAddContacts(contactsToImport);
         } else if (importType === 'deals') {
-          json.forEach(row => {
-            addDeal({
-              empresa: row['Empresa'] || row['empresa'] || '',
-              produto: row['Produto'] || row['produto'] || '',
-              valorUnico: parseFloat(String(row['Valor'] || row['valor'] || '0').replace(/[^\d,.-]/g, '').replace(',', '.')) || 0,
-              etapaId: 'etapa-1'
-            });
-            count++;
-          });
+          const dealsToImport = json.map(row => ({
+            empresa: row['Empresa'] || row['empresa'] || '',
+            produto: row['Produto'] || row['produto'] || '',
+            valorUnico: parseFloat(String(row['Valor'] || row['valor'] || '0').replace(/[^\d,.-]/g, '').replace(',', '.')) || 0,
+            etapaId: 'etapa-1'
+          }));
+          result = await bulkAddDeals(dealsToImport);
         }
 
-        setImportResult({ success: true, count });
+        setImportResult(result);
       } catch (err) {
+        console.error("Erro na leitura do arquivo:", err);
         setImportResult({ success: false, error: 'Erro ao ler o arquivo. Verifique o formato.' });
+      } finally {
+        setIsImporting(false);
       }
     };
     reader.readAsArrayBuffer(file);
@@ -557,10 +559,18 @@ const Reports = () => {
             onChange={handleFileImport}
           />
 
-          <button className="import-drop-btn" onClick={() => fileInputRef.current.click()}>
-            <FileUp size={32} />
-            <strong>Clique para selecionar o arquivo</strong>
-            <span>Formatos aceitos: .xlsx, .xls, .csv</span>
+          <button 
+            className={`import-drop-btn ${isImporting ? 'disabled' : ''}`} 
+            onClick={() => !isImporting && fileInputRef.current.click()}
+            disabled={isImporting}
+          >
+            {isImporting ? (
+              <div className="loader-spinner"></div>
+            ) : (
+              <FileUp size={32} />
+            )}
+            <strong>{isImporting ? 'Processando dados...' : 'Clique para selecionar o arquivo'}</strong>
+            <span>{isImporting ? 'Isso pode levar alguns segundos' : 'Formatos aceitos: .xlsx, .xls, .csv'}</span>
           </button>
 
           {importResult && (

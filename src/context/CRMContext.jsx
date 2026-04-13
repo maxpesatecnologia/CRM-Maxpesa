@@ -244,6 +244,30 @@ export const CRMProvider = ({ children }) => {
     else console.error("Erro ao adicionar motivo de perda:", error);
   };
 
+  const bulkAddContacts = async (contactsArray) => {
+    const { data, error } = await supabase.from('contacts').insert(contactsArray).select();
+    if (!error && data) {
+      setContacts(prev => [...data, ...prev]);
+      return { success: true, count: data.length };
+    } else {
+      console.error("Erro na importação em massa de contatos:", error);
+      return { success: false, error };
+    }
+  };
+
+  const bulkAddDeals = async (dealsArray) => {
+    const dbDeals = dealsArray.map(toDbDeal);
+    const { data, error } = await supabase.from('deals').insert(dbDeals).select();
+    if (!error && data) {
+      const normalized = data.map(normalizeDeal);
+      setDeals(prev => [...normalized, ...prev]);
+      return { success: true, count: data.length };
+    } else {
+      console.error("Erro na importação em massa de negócios:", error);
+      return { success: false, error };
+    }
+  };
+
   const updateDeal = async (id, updatedFields) => {
     const dbPayload = toDbDeal(updatedFields);
     const { data, error } = await supabase.from('deals').update(dbPayload).eq('id', id).select();
@@ -419,6 +443,8 @@ export const CRMProvider = ({ children }) => {
       addLeadSource,
       addSegment,
       addLossReason,
+      bulkAddContacts,
+      bulkAddDeals,
       updateDeal,
       updateContact,
       updateFleetItem,
