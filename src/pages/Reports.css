@@ -164,6 +164,8 @@
 .export-btn.excel { background: #16A34A; color: white; }
 .export-btn.csv   { background: #0EA5E9; color: white; }
 .export-btn.html  { background: #6366F1; color: white; }
+.export-btn.ai-json { background: linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%); color: white; }
+.export-btn.ai-prompt { background: linear-gradient(135deg, #9333EA 0%, #C026D3 100%); color: white; }
 
 /* Preview da tabela */
 .preview-table {

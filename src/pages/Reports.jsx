@@ -5,7 +5,8 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
   FileDown, FileUp, FileText, FileSpreadsheet, Table2,
-  CheckCircle2, AlertCircle, Users, Briefcase, ListTodo, Truck, Globe
+  CheckCircle2, AlertCircle, Users, Briefcase, ListTodo, Truck, Globe,
+  Cpu, Zap, Copy
 } from 'lucide-react';
 import './Reports.css';
 
@@ -131,6 +132,65 @@ const Reports = () => {
     });
 
     doc.save(`${exportType}_${today()}.pdf`);
+  };
+
+  // ────────────────── EXPORTAR JSON (PARA IA) ──────────────────
+  const exportJSON = () => {
+    const cfg = exportConfigs[exportType];
+    const rawData = {
+      deals, contacts, tasks, users, fleet
+    }[exportType];
+
+    const dataToExport = {
+      metadata: {
+        sistema: "MAXPESA CRM",
+        relatorio: cfg.label,
+        dataGeracao: new Date().toLocaleString('pt-BR'),
+        totalRegistros: rawData.length,
+        versaoExportacao: "1.0-IA"
+      },
+      dados: rawData
+    };
+
+    const blob = new Blob([JSON.stringify(dataToExport, null, 2)], { type: 'application/json' });
+    downloadBlob(blob, `${exportType}_ia_${today()}.json`);
+  };
+
+  // ────────────────── COPIAR PROMPT PARA IA ──────────────────
+  const copyAIPrompt = () => {
+    const cfg = exportConfigs[exportType];
+    const rawData = {
+      deals, contacts, tasks, users, fleet
+    }[exportType];
+    
+    // Pegamos uma amostra significativa, mas segura para o contexto da maioria das IAs
+    const dataSample = rawData.slice(0, 50);
+    
+    const promptText = `
+Atue como um Especialista em Análise de Dados e Consultor de Vendas.
+Abaixo estão os dados reais do meu CRM (Módulo: ${cfg.label}) em formato JSON.
+
+### CONTEXTO DOS DADOS:
+- Sistema: MAXPESA CRM
+- Total de registros na base: ${rawData.length}
+- Amostra incluída neste prompt: ${dataSample.length} registros
+
+### DADOS (JSON):
+${JSON.stringify(dataSample, null, 2)}
+
+### TAREFAS DE ANÁLISE:
+1. Resuma o cenário atual destes dados em 3 pontos principais.
+2. Identifique gargalos, tendências ou anomalias importantes.
+3. Se houver valores financeiros, calcule o ticket médio e projeções.
+4. Liste 5 recomendações práticas e imediatas para aumentar a eficiência.
+5. Crie uma visualização em modo texto (tabela markdown) dos 5 itens mais críticos.
+
+Por favor, forneça uma análise profunda e estratégica.
+    `.trim();
+
+    navigator.clipboard.writeText(promptText).then(() => {
+      alert('Prompt estratégico copiado! Cole no seu Chat de IA (ChatGPT, Claude, Gemini) para uma análise instantânea.');
+    });
   };
 
   // ────────────────── EXPORTAR HTML ──────────────────
@@ -480,6 +540,12 @@ const Reports = () => {
             </button>
             <button className="export-btn html" onClick={exportHTML}>
               <Globe size={18} /> Exportar HTML
+            </button>
+            <button className="export-btn ai-json" onClick={exportJSON}>
+              <Cpu size={18} /> Exportar JSON (Para IA)
+            </button>
+            <button className="export-btn ai-prompt" onClick={copyAIPrompt}>
+              <Zap size={18} /> Copiar para Chat IA
             </button>
           </div>
 
