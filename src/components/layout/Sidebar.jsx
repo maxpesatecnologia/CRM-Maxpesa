@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { LayoutDashboard, Columns3, Users as UsersIcon, Settings, ChevronLeft, ChevronRight, Menu, Truck, CheckSquare, UserCircle2, BarChart2, Megaphone, Share2, Tags, XSquare } from 'lucide-react';
+import { LayoutDashboard, Columns3, Users as UsersIcon, Building2, Settings, ChevronLeft, ChevronRight, Menu, Truck, CheckSquare, UserCircle2, BarChart2, Megaphone, Share2, Tags, XSquare } from 'lucide-react';
 import './layout.css';
 
 const Sidebar = () => {
@@ -41,8 +41,13 @@ const Sidebar = () => {
         </NavLink>
         
         <NavLink to="/contacts" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+          <Building2 size={20} className="nav-icon" />
+          <span className="nav-text">Empresas</span>
+        </NavLink>
+
+        <NavLink to="/people" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
           <UsersIcon size={20} className="nav-icon" />
-          <span className="nav-text">Empresa</span>
+          <span className="nav-text">Contatos</span>
         </NavLink>
 
         <NavLink to="/tarefas" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>

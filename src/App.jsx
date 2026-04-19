@@ -12,6 +12,7 @@ import Campaigns from './pages/Campaigns';
 import LeadSources from './pages/LeadSources';
 import Segments from './pages/Segments';
 import LossReasons from './pages/LossReasons';
+import People from './pages/People';
 import Login from './pages/Login';
 
 const PrivateRoute = ({ children }) => {
@@ -32,6 +33,7 @@ function App() {
           <Route path="dashboard" element={<Dashboard />} />
           <Route path="pipeline" element={<Pipeline />} />
           <Route path="contacts" element={<Contacts />} />
+          <Route path="people" element={<People />} />
           <Route path="frota" element={<Fleet />} />
           <Route path="tarefas" element={<Tasks />} />
           <Route path="usuarios" element={<Users />} />

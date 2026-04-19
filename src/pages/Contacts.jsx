@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
 import { useCRM } from '../context/CRMContext';
-import { Plus, Search, Building2, MapPin, Phone, Mail, X, Briefcase, ListTodo, Calendar, DollarSign, Info, Target, Share2, Paperclip } from 'lucide-react';
+import { Plus, Search, Building2, MapPin, Phone, Mail, X, Briefcase, ListTodo, Calendar, DollarSign, Info, Target, Share2, Paperclip, Users } from 'lucide-react';
 import './Contacts.css';
 import './CompanyDetails.css';
 
 const Contacts = () => {
-  const { contacts, addContact, updateContact, deleteContact, deals, tasks, stages, segments, users } = useCRM();
+  const { contacts, addContact, updateContact, deleteContact, deals, tasks, stages, segments, users, people } = useCRM();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   
   // Estado para visualização 360
   const [viewingContact, setViewingContact] = useState(null);
-  const [activeDetailTab, setActiveDetailTab] = useState('dados'); // 'dados', 'vendas', 'atividades'
+  const [activeDetailTab, setActiveDetailTab] = useState('dados'); // 'dados', 'vendas', 'atividades', 'pessoas'
 
   const [form, setForm] = useState({
     empresa: '', documento: '', endereco: '', bairro: '', cidade: '', cep: '', uf: '', telefone: '', celular: '', contatos: '', email: '', segmento: '', vendedor: ''
@@ -54,6 +54,7 @@ const Contacts = () => {
   // Filtros para visão 360
   const contactDeals = viewingContact ? deals.filter(d => d.empresa === viewingContact.empresa) : [];
   const contactTasks = viewingContact ? tasks.filter(t => t.empresa === viewingContact.empresa) : [];
+  const contactPeople = viewingContact ? people.filter(p => p.company_id === viewingContact.id) : [];
 
   const getStageTitle = (id) => stages.find(s => s.id === id)?.title || id;
   const formatCurrency = (v) => new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
@@ -192,6 +193,12 @@ const Contacts = () => {
               >
                 <ListTodo size={16} style={{ marginBottom: '-3px', marginRight: '6px' }} /> Atividades ({contactTasks.length})
               </button>
+              <button 
+                className={`tab-btn ${activeDetailTab === 'pessoas' ? 'active' : ''}`} 
+                onClick={() => setActiveDetailTab('pessoas')}
+              >
+                <Users size={16} style={{ marginBottom: '-3px', marginRight: '6px' }} /> Pessoas ({contactPeople.length})
+              </button>
             </div>
 
             <div className="details-body">
@@ -298,6 +305,35 @@ const Contacts = () => {
                     </div>
                   )) : (
                     <div className="empty-details">Nenhuma atividade agendada.</div>
+                  )}
+                </div>
+              )}
+
+              {activeDetailTab === 'pessoas' && (
+                <div className="list-container focus-within:ring-2">
+                  {contactPeople.length > 0 ? contactPeople.map(person => (
+                    <div key={person.id} className="list-item">
+                      <div className="item-main-info">
+                        <h4>{person.name}</h4>
+                        <div className="item-sub-info">
+                          <span>{person.job_title || 'Sem cargo'}</span>
+                        </div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '8px' }}>
+                          {person.phones?.map((p, i) => (
+                            <span key={i} className="flex items-center gap-1" style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                              <Phone size={10}/> {p}
+                            </span>
+                          ))}
+                          {person.emails?.map((e, i) => (
+                            <span key={i} className="flex items-center gap-1" style={{ fontSize: '0.75rem', color: 'var(--primary-color)' }}>
+                              <Mail size={10}/> {e}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )) : (
+                    <div className="empty-details">Nenhuma pessoa de contato vinculada.</div>
                   )}
                 </div>
               )}

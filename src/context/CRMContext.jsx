@@ -89,6 +89,27 @@ const toDbTask = (t) => {
   return out;
 };
 
+// Converte campos de contato (empresa) para os nomes reais das colunas e filtra permitidos
+const toDbContact = (c) => {
+  const allowed = [
+    'id', 'empresa', 'documento', 'endereco', 'bairro', 'cidade', 
+    'cep', 'uf', 'telefone', 'contatos', 'email', 'segmento', 'celular', 'vendedor'
+  ];
+  const out = {};
+  allowed.forEach(col => { if (col in c) out[col] = c[col]; });
+  return out;
+};
+
+// Converte campos de pessoa para os nomes reais das colunas e filtra permitidos
+const toDbPerson = (p) => {
+  const allowed = [
+    'id', 'name', 'company_id', 'job_title', 'phones', 'emails', 'vendedor'
+  ];
+  const out = {};
+  allowed.forEach(col => { if (col in p) out[col] = p[col]; });
+  return out;
+};
+
 const CRMContext = createContext();
 
 export const useCRM = () => {
@@ -120,6 +141,7 @@ export const CRMProvider = ({ children }) => {
   const [leadSources, setLeadSources] = useState([]);
   const [segments, setSegments] = useState([]);
   const [lossReasons, setLossReasons] = useState([]);
+  const [people, setPeople] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Carrega dados iniciais do Supabase
@@ -136,7 +158,8 @@ export const CRMProvider = ({ children }) => {
           { data: campaignsData },
           { data: leadSourcesData },
           { data: segmentsData },
-          { data: lossReasonsData }
+          { data: lossReasonsData },
+          { data: peopleData }
         ] = await Promise.all([
           supabase.from('deals').select('*').order('created_at', { ascending: false }),
           supabase.from('contacts').select('*').order('empresa'),
@@ -146,7 +169,8 @@ export const CRMProvider = ({ children }) => {
           supabase.from('campaigns').select('*').order('nome'),
           supabase.from('lead_sources').select('*').order('nome'),
           supabase.from('segments').select('*').order('nome'),
-          supabase.from('loss_reasons').select('*').order('nome')
+          supabase.from('loss_reasons').select('*').order('nome'),
+          supabase.from('individual_contacts').select('*').order('name')
         ]);
 
         if (dealsData) setDeals(dealsData.map(normalizeDeal));
@@ -158,6 +182,7 @@ export const CRMProvider = ({ children }) => {
         if (leadSourcesData) setLeadSources(leadSourcesData);
         if (segmentsData) setSegments(segmentsData);
         if (lossReasonsData) setLossReasons(lossReasonsData);
+        if (peopleData) setPeople(peopleData);
 
       } catch (error) {
         console.error("Erro ao carregar dados do Supabase:", error);
@@ -196,9 +221,13 @@ export const CRMProvider = ({ children }) => {
   };
 
   const addContact = async (contactData) => {
-    const { data, error } = await supabase.from('contacts').insert([contactData]).select();
+    const dbPayload = toDbContact(contactData);
+    const { data, error } = await supabase.from('contacts').insert([dbPayload]).select();
     if (!error && data) setContacts(prev => [data[0], ...prev]);
-    else console.error("Erro ao adicionar contato:", error);
+    else {
+      console.error("Erro ao adicionar contato:", error);
+      alert("Erro ao adicionar empresa: " + (error.message || JSON.stringify(error)));
+    }
   };
 
   const addFleetItem = async (fleetData) => {
@@ -244,6 +273,16 @@ export const CRMProvider = ({ children }) => {
     else console.error("Erro ao adicionar motivo de perda:", error);
   };
 
+  const addPerson = async (personData) => {
+    const dbPayload = toDbPerson(personData);
+    const { data, error } = await supabase.from('individual_contacts').insert([dbPayload]).select();
+    if (!error && data) setPeople(prev => [data[0], ...prev]);
+    else {
+      console.error("Erro ao adicionar pessoa:", error);
+      alert("Erro ao adicionar contato (pessoa): " + (error.message || JSON.stringify(error)));
+    }
+  };
+
   const bulkAddContacts = async (contactsArray) => {
     const { data, error } = await supabase.from('contacts').insert(contactsArray).select();
     if (!error && data) {
@@ -276,9 +315,13 @@ export const CRMProvider = ({ children }) => {
   };
 
   const updateContact = async (id, updatedFields) => {
-    const { data, error } = await supabase.from('contacts').update(updatedFields).eq('id', id).select();
+    const dbPayload = toDbContact(updatedFields);
+    const { data, error } = await supabase.from('contacts').update(dbPayload).eq('id', id).select();
     if (!error && data) setContacts(prev => prev.map(c => c.id === id ? data[0] : c));
-    else console.error("Erro ao atualizar contato:", error);
+    else {
+      console.error("Erro ao atualizar contato:", error);
+      alert("Erro ao atualizar empresa: " + (error.message || JSON.stringify(error)));
+    }
   };
 
   const updateFleetItem = async (id, updatedFields) => {
@@ -322,6 +365,16 @@ export const CRMProvider = ({ children }) => {
     const { data, error } = await supabase.from('loss_reasons').update(updatedFields).eq('id', id).select();
     if (!error && data) setLossReasons(prev => prev.map(s => s.id === id ? data[0] : s));
     else console.error("Erro ao atualizar motivo de perda:", error);
+  };
+
+  const updatePerson = async (id, updatedFields) => {
+    const dbPayload = toDbPerson(updatedFields);
+    const { data, error } = await supabase.from('individual_contacts').update(dbPayload).eq('id', id).select();
+    if (!error && data) setPeople(prev => prev.map(p => p.id === id ? data[0] : p));
+    else {
+      console.error("Erro ao atualizar pessoa:", error);
+      alert("Erro ao atualizar contato (pessoa): " + (error.message || JSON.stringify(error)));
+    }
   };
 
   const moveDeal = async (dealId, targetStageId, motivoPerda = null) => {
@@ -389,6 +442,12 @@ export const CRMProvider = ({ children }) => {
     else console.error("Erro ao deletar motivo de perda:", error);
   };
 
+  const deletePerson = async (personId) => {
+    const { error } = await supabase.from('individual_contacts').delete().eq('id', personId);
+    if (!error) setPeople(prev => prev.filter(p => p.id !== personId));
+    else console.error("Erro ao deletar pessoa:", error);
+  };
+
   const bulkTransfer = async (sourceSeller, targetSeller, options) => {
     try {
       if (options.transferDeals) {
@@ -443,6 +502,7 @@ export const CRMProvider = ({ children }) => {
       addLeadSource,
       addSegment,
       addLossReason,
+      addPerson,
       bulkAddContacts,
       bulkAddDeals,
       updateDeal,
@@ -454,6 +514,7 @@ export const CRMProvider = ({ children }) => {
       updateLeadSource,
       updateSegment,
       updateLossReason,
+      updatePerson,
       deleteDeal,
       deleteContact,
       deleteFleetItem,
@@ -463,8 +524,10 @@ export const CRMProvider = ({ children }) => {
       deleteLeadSource,
       deleteSegment,
       deleteLossReason,
+      deletePerson,
       moveDeal,
       bulkTransfer,
+      people,
       isLoading
     }}>
       {children}
