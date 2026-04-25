@@ -1,5 +1,26 @@
-# Logs
-logs
+# ----------------------------
+# 📦 DEPENDÊNCIAS
+# ----------------------------
+node_modules/
+.pnp
+.pnp.js
+
+# ----------------------------
+# 🏗️ BUILD / OUTPUT
+# ----------------------------
+dist/
+dist-ssr/
+build/
+.out/
+.next/
+.nuxt/
+.cache/
+coverage/
+
+# ----------------------------
+# 📄 LOGS
+# ----------------------------
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,24 +28,78 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
-
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Environment Variables
+# ----------------------------
+# 🔐 VARIÁVEIS DE AMBIENTE
+# ----------------------------
 .env
 .env.local
-.env.*
+.env.development.local
+.env.test.local
+.env.production.local
 
+# ----------------------------
+# ⚙️ CONFIG LOCAL
+# ----------------------------
+*.local
+
+# ----------------------------
+# 💻 EDITORES / IDE
+# ----------------------------
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.DS_Store
+Thumbs.db
+
+# ----------------------------
+# 🧠 SISTEMA OPERACIONAL
+# ----------------------------
+*.swp
+*.swo
+*~
+
+# ----------------------------
+# 📁 TYPESCRIPT
+# ----------------------------
+*.tsbuildinfo
+
+# ----------------------------
+# 📦 GERENCIADORES DE PACOTES
+# ----------------------------
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# ⚠️ OBS:
+# Remova essa parte se quiser versionar o lockfile (RECOMENDADO para produção)
+
+# ----------------------------
+# 🧪 TESTES
+# ----------------------------
+coverage/
+.nyc_output/
+
+# ----------------------------
+# 🚀 DEPLOY
+# ----------------------------
+.vercel/
+.netlify/
+
+# ----------------------------
+# 📊 BANCO / CACHE LOCAL
+# ----------------------------
+*.sqlite
+*.db
+
+# ----------------------------
+# 📁 UPLOADS / TEMP
+# ----------------------------
+uploads/
+tmp/
+temp/
+
+# ----------------------------
+# 🔒 SEGURANÇA
+# ----------------------------
+*.pem
+*.key
