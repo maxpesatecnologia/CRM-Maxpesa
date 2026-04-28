@@ -3,6 +3,17 @@ import { useCRM } from '../context/CRMContext';
 import { Target, TrendingUp, DollarSign, Trophy, Clock, Building2, Loader2, Filter, X } from 'lucide-react';
 import './Dashboard.css';
 
+const MetricCard = ({ title, value, sub, icon, color }) => (
+  <div className="metric-card" style={{ borderLeft: `4px solid ${color}` }}>
+    <div className="metric-card-header">
+      <span className="metric-title">{title}</span>
+      <span className="metric-icon" style={{ color }}>{icon}</span>
+    </div>
+    <div className="metric-value" style={{ color }}>{value}</div>
+    {sub && <div className="metric-sub">{sub}</div>}
+  </div>
+);
+
 const Dashboard = () => {
   const { deals, stages, contacts, users, fleet, isLoading } = useCRM();
 
@@ -79,17 +90,6 @@ const Dashboard = () => {
 
   const formatCurrency = (v) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
-
-  const MetricCard = ({ title, value, sub, icon, color }) => (
-    <div className="metric-card" style={{ borderLeft: `4px solid ${color}` }}>
-      <div className="metric-card-header">
-        <span className="metric-title">{title}</span>
-        <span className="metric-icon" style={{ color }}>{icon}</span>
-      </div>
-      <div className="metric-value" style={{ color }}>{value}</div>
-      {sub && <div className="metric-sub">{sub}</div>}
-    </div>
-  );
 
   if (isLoading) {
     return (

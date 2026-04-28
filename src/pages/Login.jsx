@@ -18,7 +18,7 @@ const Login = () => {
     try {
       await signIn(email, password);
       navigate('/pipeline');
-    } catch (err) {
+    } catch {
       setError('Credenciais inválidas. Verifique seu e-mail e senha.');
     } finally {
       setLoading(false);

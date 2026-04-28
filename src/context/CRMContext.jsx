@@ -142,6 +142,7 @@ export const CRMProvider = ({ children }) => {
   const [segments, setSegments] = useState([]);
   const [lossReasons, setLossReasons] = useState([]);
   const [people, setPeople] = useState([]);
+  const [attachments, setAttachments] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Carrega dados iniciais do Supabase
@@ -159,7 +160,8 @@ export const CRMProvider = ({ children }) => {
           { data: leadSourcesData },
           { data: segmentsData },
           { data: lossReasonsData },
-          { data: peopleData }
+          { data: peopleData },
+          { data: attachmentsData }
         ] = await Promise.all([
           supabase.from('deals').select('*').order('created_at', { ascending: false }),
           supabase.from('contacts').select('*').order('empresa'),
@@ -170,7 +172,8 @@ export const CRMProvider = ({ children }) => {
           supabase.from('lead_sources').select('*').order('nome'),
           supabase.from('segments').select('*').order('nome'),
           supabase.from('loss_reasons').select('*').order('nome'),
-          supabase.from('individual_contacts').select('*').order('name')
+          supabase.from('individual_contacts').select('*').order('name'),
+          supabase.from('attachments').select('*').order('created_at', { ascending: false })
         ]);
 
         if (dealsData) setDeals(dealsData.map(normalizeDeal));
@@ -183,6 +186,7 @@ export const CRMProvider = ({ children }) => {
         if (segmentsData) setSegments(segmentsData);
         if (lossReasonsData) setLossReasons(lossReasonsData);
         if (peopleData) setPeople(peopleData);
+        if (attachmentsData) setAttachments(attachmentsData);
 
       } catch (error) {
         console.error("Erro ao carregar dados do Supabase:", error);
@@ -280,6 +284,34 @@ export const CRMProvider = ({ children }) => {
     else {
       console.error("Erro ao adicionar pessoa:", error);
       alert("Erro ao adicionar contato (pessoa): " + (error.message || JSON.stringify(error)));
+    }
+  };
+
+  const addAttachment = async (attachmentData) => {
+    const { data, error } = await supabase.from('attachments').insert([attachmentData]).select();
+    if (!error && data) {
+      setAttachments(prev => [data[0], ...prev]);
+      return data[0];
+    } else {
+      console.error("Erro ao salvar anexo no banco:", error);
+      throw error;
+    }
+  };
+
+  const deleteAttachment = async (attachmentId, filePath) => {
+    // 1. Deletar do Storage
+    const { error: storageError } = await supabase.storage.from('crm-attachments').remove([filePath]);
+    if (storageError) {
+      console.error("Erro ao deletar do storage:", storageError);
+    }
+
+    // 2. Deletar do Banco
+    const { error: dbError } = await supabase.from('attachments').delete().eq('id', attachmentId);
+    if (!dbError) {
+      setAttachments(prev => prev.filter(a => a.id !== attachmentId));
+    } else {
+      console.error("Erro ao deletar anexo do banco:", dbError);
+      throw dbError;
     }
   };
 
@@ -527,6 +559,9 @@ export const CRMProvider = ({ children }) => {
       deletePerson,
       moveDeal,
       bulkTransfer,
+      addAttachment,
+      deleteAttachment,
+      attachments,
       people,
       isLoading
     }}>

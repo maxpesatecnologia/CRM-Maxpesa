@@ -6,7 +6,7 @@ import { ptBR } from 'date-fns/locale';
 import './Tasks.css';
 
 const Tasks = () => {
-  const { tasks, deals, contacts, users, addTask, updateTask, deleteTask } = useCRM();
+  const { tasks, contacts, users, addTask, updateTask, deleteTask } = useCRM();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -283,8 +283,6 @@ const Tasks = () => {
             {sortedTasks.length > 0 ? (
               sortedTasks.map(task => {
                 const statusInfo = getTaskStatusInfo(task);
-                const relatedDeal = deals.find(d => d.id === task.dealId);
-                
                 return (
                   <tr key={task.id} className={task.concluida ? 'row-completed' : ''}>
                     <td className="center-col">
