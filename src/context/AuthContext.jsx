@@ -16,11 +16,16 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Busca a sessão atual
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
-    });
+    supabase.auth.getSession()
+      .then(({ data: { session } }) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Erro ao buscar sessão do Supabase:", error);
+        setLoading(false);
+      });
 
     // Escuta mudanças no estado de autenticação
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {

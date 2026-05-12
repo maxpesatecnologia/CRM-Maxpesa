@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS deals (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   empresa TEXT NOT NULL,
+  nomeNegocacao TEXT,
   valorUnico NUMERIC DEFAULT 0,
   valorRecorrente NUMERIC DEFAULT 0,
   fonte TEXT,
@@ -41,7 +42,9 @@ CREATE TABLE IF NOT EXISTS deals (
   dataCriacao DATE DEFAULT CURRENT_DATE,
   dataFechamento DATE,
   produto TEXT,
-  vendedor TEXT
+  vendedor TEXT,
+  anexo TEXT,
+  anexoNome TEXT
 );
 
 -- 4. Tabela de Tarefas
@@ -68,14 +71,6 @@ CREATE TABLE IF NOT EXISTS users_crm (
   perfil TEXT DEFAULT 'Usuário',
   status TEXT DEFAULT 'Ativo'
 );
-
--- Habilitar RLS (Opcional para teste inicial, mas recomendado desabilitar ou criar políticas para anon access)
--- Por simplicidade inicial, você pode desabilitar o RLS ou rodar:
--- ALTER TABLE contacts DISABLE ROW LEVEL SECURITY;
--- ALTER TABLE fleet DISABLE ROW LEVEL SECURITY;
--- ALTER TABLE deals DISABLE ROW LEVEL SECURITY;
--- ALTER TABLE tasks DISABLE ROW LEVEL SECURITY;
--- ALTER TABLE users_crm DISABLE ROW LEVEL SECURITY;
 
 -- 6. Tabela de Campanhas
 CREATE TABLE IF NOT EXISTS campaigns (
@@ -108,3 +103,41 @@ CREATE TABLE IF NOT EXISTS loss_reasons (
   created_at TIMESTAMPTZ DEFAULT NOW(),
   nome TEXT NOT NULL
 );
+
+-- 10. Tabela de Contatos Individuais (Pessoas)
+CREATE TABLE IF NOT EXISTS individual_contacts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  name TEXT NOT NULL,
+  company_id UUID REFERENCES contacts(id) ON DELETE SET NULL,
+  job_title TEXT,
+  phones JSONB DEFAULT '[]'::jsonb,
+  emails JSONB DEFAULT '[]'::jsonb,
+  vendedor TEXT
+);
+
+-- 11. Tabela de Anexos
+CREATE TABLE IF NOT EXISTS attachments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  deal_id UUID REFERENCES deals(id) ON DELETE CASCADE,
+  file_name TEXT NOT NULL,
+  file_path TEXT NOT NULL,
+  file_size NUMERIC,
+  file_type TEXT,
+  uploaded_by TEXT
+);
+
+-- Desabilitar RLS para todas as tabelas (Desenvolvimento)
+ALTER TABLE contacts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE fleet DISABLE ROW LEVEL SECURITY;
+ALTER TABLE deals DISABLE ROW LEVEL SECURITY;
+ALTER TABLE tasks DISABLE ROW LEVEL SECURITY;
+ALTER TABLE users_crm DISABLE ROW LEVEL SECURITY;
+ALTER TABLE campaigns DISABLE ROW LEVEL SECURITY;
+ALTER TABLE lead_sources DISABLE ROW LEVEL SECURITY;
+ALTER TABLE segments DISABLE ROW LEVEL SECURITY;
+ALTER TABLE loss_reasons DISABLE ROW LEVEL SECURITY;
+ALTER TABLE individual_contacts DISABLE ROW LEVEL SECURITY;
+ALTER TABLE attachments DISABLE ROW LEVEL SECURITY;
+

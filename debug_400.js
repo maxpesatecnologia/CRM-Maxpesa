@@ -1,6 +1,5 @@
 
 import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
 import fs from 'fs';
 
 // Tenta ler o .env manualmente já que o script falhou antes
