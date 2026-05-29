@@ -57,21 +57,29 @@ const Dashboard = () => {
   ).size;
 
   // ── Tempo Médio até a Venda ───────────────────────────────────────────────
+  // Aceita YYYY-MM-DD (ISO) e DD/MM/YYYY (formato brasileiro de planilhas)
+  const parseDate = (str) => {
+    if (!str) return null;
+    if (/^\d{2}\/\d{2}\/\d{4}$/.test(str)) {
+      const [d, m, y] = str.split('/');
+      return new Date(`${y}-${m}-${d}`);
+    }
+    const dt = new Date(str);
+    return isNaN(dt.getTime()) ? null : dt;
+  };
+
   const avgDaysToClose = useMemo(() => {
-    const closed = wonDeals.filter(d => {
-      const inicio = d.dataCriacao;
-      const fim    = d.dataFechamento;
-      return inicio && fim;
-    });
-    if (closed.length === 0) return null;
-    const totalDays = closed.reduce((acc, d) => {
-      const inicio = new Date(d.dataCriacao);
-      const fim    = new Date(d.dataFechamento);
-      const diff   = Math.max(0, Math.round((fim - inicio) / (1000 * 60 * 60 * 24)));
-      return acc + diff;
+    const withDates = wonDeals.filter(d => parseDate(d.dataCriacao) && parseDate(d.dataFechamento));
+    if (withDates.length === 0) return null;
+    const totalDays = withDates.reduce((acc, d) => {
+      const inicio = parseDate(d.dataCriacao);
+      const fim    = parseDate(d.dataFechamento);
+      return acc + Math.max(0, Math.round((fim - inicio) / (1000 * 60 * 60 * 24)));
     }, 0);
-    return Math.round(totalDays / closed.length);
+    return Math.round(totalDays / withDates.length);
   }, [wonDeals]);
+
+  const dealsWithDates = wonDeals.filter(d => parseDate(d.dataCriacao) && parseDate(d.dataFechamento));
 
   // ── Base do Cálculo de Conversão (Somente Etapa "Lead Gerado") ──
   const conversionBase = filteredDeals.filter(d => d.etapaId === 'etapa-1').length;
@@ -88,8 +96,14 @@ const Dashboard = () => {
   });
   const maxCount = Math.max(...stageData.map(s => s.count), 1);
 
-  const formatCurrency = (v) =>
-    new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v || 0);
+  const formatCurrency = (v) => {
+    const n = v || 0;
+    if (n >= 1_000_000)
+      return 'R$ ' + (n / 1_000_000).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Mi';
+    if (n >= 1_000)
+      return 'R$ ' + (n / 1_000).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 1 }) + ' K';
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(n);
+  };
 
   if (isLoading) {
     return (
@@ -204,8 +218,10 @@ const Dashboard = () => {
           value={avgDaysToClose !== null ? `${avgDaysToClose} dias` : '—'}
           sub={
             avgDaysToClose !== null
-              ? `Calculado sobre ${wonDeals.filter(d => d.dataCriacao && d.dataFechamento).length} negócio(s) fechado(s)`
-              : 'Sem negócios com data de fechamento'
+              ? `Calculado sobre ${dealsWithDates.length} negócio(s) com datas registradas`
+              : wonDeals.length > 0
+                ? 'Mova negócios pelo funil para registrar as datas'
+                : 'Sem negócios vencidos registrados'
           }
           icon={<Clock size={20} />}
           color="#F59E0B"
