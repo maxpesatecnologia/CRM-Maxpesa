@@ -15,6 +15,7 @@ const Users = () => {
   const [formData, setFormData] = useState({
     nome: '',
     email: '',
+    senha: '',
     perfil: 'Usuário',
     status: 'Ativo'
   });
@@ -78,17 +79,13 @@ const Users = () => {
       setFormData({
         nome: item.nome,
         email: item.email || '',
+        senha: '',
         perfil: item.perfil || 'Usuário',
         status: item.status || 'Ativo'
       });
     } else {
       setEditingId(null);
-      setFormData({
-        nome: '',
-        email: '',
-        perfil: 'Usuário',
-        status: 'Ativo'
-      });
+      setFormData({ nome: '', email: '', senha: '', perfil: 'Usuário', status: 'Ativo' });
     }
     setIsModalOpen(true);
   };
@@ -98,16 +95,22 @@ const Users = () => {
     setEditingId(null);
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.nome || !formData.email) return;
+    if (!editingId && !formData.senha) {
+      alert('A senha é obrigatória para criar um novo vendedor.');
+      return;
+    }
 
     if (editingId) {
-      updateUser(editingId, formData);
+      const { senha: _, ...updateData } = formData;
+      await updateUser(editingId, updateData);
     } else {
-      addUser(formData);
+      const result = await addUser(formData);
+      if (!result) return; // erro já tratado pelo CRMContext via toast
     }
-    
+
     handleCloseModal();
   };
 
@@ -247,14 +250,31 @@ const Users = () => {
 
               <div className="form-group">
                 <label>E-mail *</label>
-                <input 
-                  type="email" 
+                <input
+                  type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                   placeholder="exemplo@empresa.com.br"
                   required
                 />
               </div>
+
+              {!editingId && (
+                <div className="form-group">
+                  <label>Senha de acesso *</label>
+                  <input
+                    type="password"
+                    value={formData.senha}
+                    onChange={(e) => setFormData({...formData, senha: e.target.value})}
+                    placeholder="Mínimo 6 caracteres"
+                    minLength={6}
+                    required
+                  />
+                  <small style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                    O vendedor usará este e-mail e senha para acessar o CRM.
+                  </small>
+                </div>
+              )}
 
               <div className="form-row">
                  <div className="form-group flex-1">
