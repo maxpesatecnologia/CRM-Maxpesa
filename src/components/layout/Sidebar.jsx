@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { LayoutDashboard, Columns3, Users as UsersIcon, Building2, Settings, ChevronLeft, ChevronRight, Menu, Truck, CheckSquare, UserCircle2, BarChart2, Megaphone, Share2, Tags, XSquare } from 'lucide-react';
+import { SidebarLogo, SidebarLogoMark } from '../ui/MaxpesaLogo';
 import './layout.css';
 
 const Sidebar = () => {
@@ -10,22 +11,13 @@ const Sidebar = () => {
   return (
     <div className={`sidebar ${collapsed ? 'collapsed' : ''}`}>
       <div className="sidebar-header">
-        {!collapsed && (
-          <div className="sidebar-brand">
-            <div className="brand-logo">
-              <strong>M</strong>
-            </div>
-            <div className="brand-text">
-              <div className="brand-name">
-                <span>MAXPESA</span>
-              </div>
-              <span className="brand-subtext">LOCAÇÃO DE GUINDASTE</span>
-              <span className="brand-suffix">CRM</span>
-            </div>
-          </div>
+        {collapsed ? (
+          <SidebarLogoMark />
+        ) : (
+          <SidebarLogo />
         )}
         <button className="toggle-btn" onClick={() => setCollapsed(!collapsed)}>
-          {collapsed ? <Menu size={20} /> : <ChevronLeft size={20} />}
+          {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
         </button>
       </div>
       

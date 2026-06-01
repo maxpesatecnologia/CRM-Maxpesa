@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { LoginLogo } from '../components/ui/MaxpesaLogo';
 import './Login.css';
 
 const Login = () => {
@@ -30,11 +31,7 @@ const Login = () => {
       <div className="login-background"></div>
       <div className="login-card">
         <div className="login-header">
-          <div className="logo-placeholder">
-            {/* Aqui você pode colocar a logo da Maxpesa */}
-            <h1>MAX<span>PESA</span></h1>
-            <p>CRM & Gestão Comercial</p>
-          </div>
+          <LoginLogo />
         </div>
         
         <form onSubmit={handleSubmit} className="login-form">

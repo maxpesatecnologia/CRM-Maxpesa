@@ -1,30 +1,30 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Oswald:wght@500;600;700&display=swap');
 
 :root {
-  /* Cores Principais - Tema Vermelho solicitado */
-  --primary-color: #D32F2F; /* Vermelho vibrante e moderno */
-  --primary-hover: #B71C1C;
+  /* Cores Principais - Tema Maxpesa */
+  --primary-color: #E30613; /* Vermelho Max */
+  --primary-hover: #B30000; /* Vermelho Escuro */
   --primary-light: #FFCDD2;
   
-  --bg-color: #F4F6F8; /* Cinza bem claro / Off-white para descanso visual */
-  --surface-color: #FFFFFF; /* Fundo de cards e modais */
+  --bg-color: #F4F6F8;
+  --surface-color: #FFFFFF;
   
-  --text-main: #2D3748;
-  --text-muted: #718096;
+  --text-main: #111111; /* Preto Max */
+  --text-muted: #666666; /* Cinza Médio */
   
-  --border-color: #E2E8F0;
-  --column-bg: #EDF2F7; /* Fundo leve para as colunas do Kanban */
+  --border-color: #BFBFBF; /* Cinza Claro */
+  --column-bg: #EDF2F7;
   
-  /* Tema do Sidebar - Opção Profissional Dark */
-  --sidebar-bg: #1e293b; 
-  --sidebar-text: #94a3b8;
-  --sidebar-text-hover: #f1f5f9;
-  --sidebar-border: #334155;
+  /* Tema do Sidebar - Dark Premium */
+  --sidebar-bg: #111111; /* Preto Max */
+  --sidebar-text: #BFBFBF; /* Cinza Claro */
+  --sidebar-text-hover: #FFFFFF;
+  --sidebar-border: #333333; /* Grafite */
 
   /* Cores Semânticas */
-  --success-color: #38A169; /* Verde para ganho/vencemos */
-  --danger-color: #E53E3E; /* Vermelho mais intenso para erros/perdemos */
-  --warning-color: #DD6B20; /* Laranja/Amarelo para alertas */
+  --success-color: #38A169;
+  --danger-color: #E30613; 
+  --warning-color: #FF6A00; /* Laranja de Acento */
   --info-color: #3182CE;
 
   /* Formas e Sombras */
@@ -53,7 +53,9 @@ body {
 }
 
 h1, h2, h3, h4, h5, h6 {
+  font-family: 'Oswald', sans-serif;
   font-weight: 600;
+  text-transform: uppercase;
   color: var(--text-main);
 }
 
