@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { supabase } from '../lib/supabase';
+import { useToast } from './ToastContext';
 
 // Normaliza as colunas que o Supabase retorna em minúsculo de volta para camelCase
 const normalizeDeal = (d) => {
@@ -138,6 +139,7 @@ const defaultStages = [
 ];
 
 export const CRMProvider = ({ children }) => {
+  const toast = useToast();
   const [stages] = useState(defaultStages);
   const [deals, setDeals] = useState([]);
   const [contacts, setContacts] = useState([]);
@@ -254,10 +256,41 @@ export const CRMProvider = ({ children }) => {
     else console.error("Erro ao adicionar tarefa:", error);
   };
 
-  const addUser = async (userData) => {
-    const { data, error } = await supabase.from('users_crm').insert([userData]).select();
-    if (!error && data) setUsers(prev => [data[0], ...prev]);
-    else console.error("Erro ao adicionar usuário:", error);
+  const addUser = async ({ nome, email, senha, perfil, status }) => {
+    // 1. Cria a conta de autenticação no Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password: senha,
+      options: { data: { full_name: nome } },
+    });
+
+    if (authError) {
+      toast.error('Erro ao criar conta: ' + authError.message);
+      return null;
+    }
+
+    const authUserId = authData.user?.id;
+
+    // 2. Insere ou atualiza o registro CRM (upsert trata o caso do trigger já ter inserido)
+    const { data, error } = await supabase
+      .from('users_crm')
+      .upsert([{ id: authUserId, nome, email, perfil, status }], { onConflict: 'id' })
+      .select();
+
+    if (error) {
+      toast.error('Conta criada mas erro ao salvar perfil: ' + error.message);
+      return null;
+    }
+
+    setUsers(prev => {
+      const exists = prev.some(u => u.id === authUserId);
+      return exists
+        ? prev.map(u => u.id === authUserId ? data[0] : u)
+        : [data[0], ...prev];
+    });
+
+    toast.success('Vendedor criado com sucesso!');
+    return data[0];
   };
 
   const addCampaign = async (campaignData) => {
