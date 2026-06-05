@@ -410,6 +410,36 @@ Por favor, forneça uma análise profunda e estratégica.
     printWindow.document.close();
   };
 
+  // Converte data do Excel (serial ou DD/MM/YYYY) para YYYY-MM-DD
+  const parseExcelDate = (val) => {
+    if (!val && val !== 0) return null;
+    if (typeof val === 'number') {
+      const d = new Date(Math.round((val - 25569) * 86400 * 1000));
+      return isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+    }
+    const s = String(val).trim();
+    const dmY = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    if (dmY) {
+      const [, d, m, y] = dmY;
+      return `${y.length === 2 ? '20' + y : y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`;
+    }
+    if (/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0, 10);
+    return null;
+  };
+
+  // Mapeia nome de etapa para ID
+  const parseStage = (val) => {
+    const v = String(val || '').toLowerCase().trim();
+    const map = {
+      'lead gerado': 'etapa-1', 'lead qualificado': 'etapa-2',
+      'vistoria': 'etapa-3', 'proposta': 'etapa-4',
+      'pesquisa': 'etapa-5', 'negociacao': 'etapa-6', 'negociação': 'etapa-6',
+      'perdemos': 'etapa-7', 'perdido': 'etapa-7',
+      'vencemos': 'etapa-8', 'ganho': 'etapa-8', 'fechado': 'etapa-8',
+    };
+    return map[v] || (v.startsWith('etapa-') ? v : 'etapa-1');
+  };
+
   // ────────────────── IMPORTAR ARQUIVO ──────────────────
   const handleFileImport = (e) => {
     const file = e.target.files[0];
@@ -450,12 +480,32 @@ Por favor, forneça uma análise profunda e estratégica.
           }));
           result = await bulkAddContacts(contactsToImport);
         } else if (importType === 'deals') {
-          const dealsToImport = json.map(row => ({
-            empresa: row['Empresa'] || row['empresa'] || '',
-            produto: row['Produto'] || row['produto'] || '',
-            valorUnico: parseFloat(String(row['Valor'] || row['valor'] || '0').replace(/[^\d,.-]/g, '').replace(',', '.')) || 0,
-            etapaId: 'etapa-1'
-          }));
+          const today = new Date().toISOString().slice(0, 10);
+          const dealsToImport = json.map(row => {
+            const parseMoney = (v) => {
+              if (!v && v !== 0) return 0;
+              if (typeof v === 'number') return v;
+              return parseFloat(String(v).replace(/[R$\s.]/g, '').replace(',', '.')) || 0;
+            };
+            // Lê a data de criação da planilha; se ausente usa hoje
+            const dateRaw =
+              row['Data de Criação'] || row['Data Criação'] || row['Data Criacao'] ||
+              row['datacriacao'] || row['dataCriacao'] || row['Data'] || row['data'] || '';
+            return {
+              empresa:         String(row['Empresa']           || row['empresa']            || '').trim(),
+              nomeNegocacao:   String(row['Nome Negociação']   || row['Nome Negociacao']    || row['nome'] || row['Nome'] || '').trim(),
+              dataCriacao:     parseExcelDate(dateRaw) || today,
+              dataFechamento:  parseExcelDate(row['Data de Fechamento'] || row['Data Fechamento'] || '') || null,
+              valorUnico:      parseMoney(row['Valor Único'] || row['Valor Unico'] || row['Valor'] || row['valor']),
+              valorRecorrente: parseMoney(row['Valor Recorrente'] || row['valor_recorrente'] || 0),
+              etapaId:         parseStage(row['Etapa'] || row['etapa'] || row['Stage'] || ''),
+              vendedor:        String(row['Responsavel'] || row['responsavel'] || row['Vendedor'] || row['vendedor'] || '').trim(),
+              fonte:           String(row['Fonte']     || row['fonte']     || '').trim(),
+              campanha:        String(row['Campanha']  || row['campanha']  || '').trim(),
+              produto:         String(row['Produto']   || row['produto']   || '').trim(),
+              motivoPerda:     String(row['Motivo de Perda'] || row['Motivo Perda'] || row['motivoPerda'] || '').trim() || null,
+            };
+          }).filter(d => d.empresa);
           result = await bulkAddDeals(dealsToImport);
         }
 
@@ -476,8 +526,10 @@ Por favor, forneça uma análise profunda e estratégica.
     const templates = {
       contacts: [['Empresa', 'CNPJ/CPF', 'Endereço', 'Cidade', 'UF', 'CEP', 'Telefone', 'Celular', 'E-mail', 'Segmento', 'Vendedor'],
                  ['Empresa Exemplo LTDA', '00.000.000/0001-00', 'Rua das Flores, 100', 'São Paulo', 'SP', '01000-000', '(11) 3000-0000', '(11) 90000-0000', 'maria@exemplo.com', 'Indústria', 'João Vendedor']],
-      deals: [['Empresa', 'Produto', 'Valor'],
-              ['Empresa Exemplo', 'Guindaste 50T', '25000']]
+      deals: [
+        ['Empresa', 'Etapa', 'Motivo de Perda', 'Valor Único', 'Valor Recorrente', 'Data de Criação', 'Data de Fechamento', 'Fonte', 'Campanha', 'Responsavel', 'Produto'],
+        ['Empresa Exemplo LTDA', 'Proposta Comercial', '', '25000', '0', '15/01/2026', '', 'Indicação', '', 'João Vendedor', 'Guindaste 50T']
+      ]
     };
     const model = templates[importType] || templates.contacts;
     const ws = XLSX.utils.aoa_to_sheet(model);
@@ -617,8 +669,10 @@ Por favor, forneça uma análise profunda e estratégica.
                 <li>Colunas esperadas: <code>Empresa</code>, <code>CNPJ/CPF</code>, <code>Endereço</code>, <code>Cidade</code>, <code>UF</code>, <code>CEP</code>, <code>Telefone</code>, <code>Celular</code>, <code>E-mail</code>, <code>Segmento</code>, <code>Vendedor</code></li>
               </>}
               {importType === 'deals' && <>
-                <li>Colunas esperadas: <code>Empresa</code>, <code>Produto</code>, <code>Valor</code></li>
-                <li>As negociações serão criadas na etapa <strong>Lead Gerado</strong></li>
+                <li>Ordem das colunas: <code>Empresa</code> · <code>Etapa</code> · <code>Motivo de Perda</code> · <code>Valor Único</code> · <code>Valor Recorrente</code> · <code>Data de Criação</code> · <code>Data de Fechamento</code> · <code>Fonte</code> · <code>Campanha</code> · <code>Responsavel</code> · <code>Produto</code></li>
+                <li>A <strong>Data de Criação</strong> aceita o formato <code>DD/MM/YYYY</code></li>
+                <li>Etapas aceitas: <code>Lead Gerado</code>, <code>Proposta Comercial</code>, <code>Vencemos</code>, <code>Perdemos</code>, etc.</li>
+                <li>Baixe o template para ver o modelo exato</li>
               </>}
             </ul>
             <button className="btn-template" onClick={downloadTemplate}>

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { DndContext, useSensor, useSensors, PointerSensor, closestCenter } from '@dnd-kit/core';
 import { useCRM } from '../context/CRMContext';
-import { Plus, Building2, Calendar, DollarSign, X, Edit2, Trash2, Paperclip, FileText, Sparkles, UserCheck, HardHat, Search, Handshake, XCircle, Trophy } from 'lucide-react';
+import { Plus, Building2, Calendar, DollarSign, X, Edit2, Trash2, Paperclip, FileText, Sparkles, UserCheck, HardHat, Search, Handshake, XCircle, Trophy, Upload } from 'lucide-react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
+import ImportDeals from '../components/ImportDeals';
 import './Pipeline.css';
 
 // --- Card Component (Draggable) ---
@@ -176,7 +177,8 @@ const Pipeline = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [lossModalOpen, setLossModalOpen] = useState(false);
   const [pendingMove, setPendingMove] = useState(null);
-  
+  const [importOpen, setImportOpen] = useState(false);
+
   // Edição
   const [editingDealId, setEditingDealId] = useState(null);
   
@@ -355,9 +357,14 @@ const Pipeline = () => {
           <h1>Funil de Vendas</h1>
           <p>Mova as negociações entre as etapas do funil</p>
         </div>
-        <button className="btn-primary" onClick={handleOpenNewDeal}>
-          <Plus size={18} /> Adicionar Negócio
-        </button>
+        <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button className="btn-secondary" onClick={() => setImportOpen(true)}>
+            <Upload size={18} /> Importar Planilha
+          </button>
+          <button className="btn-primary" onClick={handleOpenNewDeal}>
+            <Plus size={18} /> Adicionar Negócio
+          </button>
+        </div>
       </div>
 
       <DndContext sensors={sensors} onDragEnd={handleDragEnd} collisionDetection={closestCenter}>
@@ -630,6 +637,13 @@ const Pipeline = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {importOpen && (
+        <ImportDeals
+          onClose={() => setImportOpen(false)}
+          onImport={(dealData) => addDeal(dealData)}
+        />
       )}
 
     </div>
