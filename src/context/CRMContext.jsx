@@ -208,27 +208,25 @@ export const CRMProvider = ({ children }) => {
   }, []);
 
   const addDeal = async (dealData) => {
-    const formattedDeal = { 
-      ...dealData, 
-      datacriacao: dealData.dataCriacao || dealData.datacriacao || format(new Date(), 'yyyy-MM-dd'), 
-      motivoperda: null 
+    const formattedDeal = {
+      ...dealData,
+      datacriacao: dealData.dataCriacao || dealData.datacriacao || format(new Date(), 'yyyy-MM-dd'),
+      motivoperda: dealData.motivoPerda ?? dealData.motivoperda ?? null,
     };
     delete formattedDeal.dataCriacao;
     delete formattedDeal.motivoPerda;
-    
+
     const dbPayload = toDbDeal(formattedDeal);
-    console.log("Saving new deal to DB (filtered):", dbPayload);
 
     const { data, error } = await supabase.from('deals').insert([dbPayload]).select();
-    
+
     if (error) {
-      console.error("Erro detalhado do Supabase:", error.message, error.details, error.hint);
-      alert("Erro ao salvar no banco de dados: " + error.message);
+      console.error("Erro ao salvar negociação:", error.message, error.details);
+      toast.error('Erro ao salvar negociação: ' + error.message);
       return;
     }
 
     if (data && data.length > 0) {
-      console.log("Successfully saved deal:", data[0]);
       setDeals(prev => [normalizeDeal(data[0]), ...prev]);
     }
   };
@@ -367,14 +365,22 @@ export const CRMProvider = ({ children }) => {
   };
 
   const bulkAddDeals = async (dealsArray) => {
-    const dbDeals = dealsArray.map(toDbDeal);
+    const today = format(new Date(), 'yyyy-MM-dd');
+    // Garante datacriacao preenchida antes de converter para o schema do banco
+    const withDefaults = dealsArray.map(d => ({
+      ...d,
+      dataCriacao: d.dataCriacao || d.datacriacao || today,
+    }));
+    const dbDeals = withDefaults.map(toDbDeal);
     const { data, error } = await supabase.from('deals').insert(dbDeals).select();
     if (!error && data) {
       const normalized = data.map(normalizeDeal);
       setDeals(prev => [...normalized, ...prev]);
+      toast.success(`${data.length} negócio(s) importado(s) com sucesso!`);
       return { success: true, count: data.length };
     } else {
-      console.error("Erro na importação em massa de negócios:", error);
+      console.error("Erro na importação em massa:", error);
+      toast.error('Erro na importação: ' + (error?.message || 'Erro desconhecido'));
       return { success: false, error };
     }
   };

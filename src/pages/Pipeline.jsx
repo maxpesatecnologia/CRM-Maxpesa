@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { DndContext, useSensor, useSensors, PointerSensor, closestCenter } from '@dnd-kit/core';
 import { useCRM } from '../context/CRMContext';
 import { Plus, Building2, Calendar, DollarSign, X, Edit2, Trash2, Paperclip, FileText, Sparkles, UserCheck, HardHat, Search, Handshake, XCircle, Trophy, Upload } from 'lucide-react';
@@ -173,7 +173,7 @@ const Column = ({ title, id, deals, onEdit, onDelete }) => {
 
 // --- Main Pipeline Component ---
 const Pipeline = () => {
-  const { stages, deals, moveDeal, addDeal, updateDeal, deleteDeal, lossReasons, fleet, contacts, campaigns, leadSources, users } = useCRM();
+  const { stages, deals, moveDeal, addDeal, bulkAddDeals, updateDeal, deleteDeal, lossReasons, fleet, contacts, campaigns, leadSources, users } = useCRM();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [lossModalOpen, setLossModalOpen] = useState(false);
   const [pendingMove, setPendingMove] = useState(null);
@@ -642,7 +642,7 @@ const Pipeline = () => {
       {importOpen && (
         <ImportDeals
           onClose={() => setImportOpen(false)}
-          onImport={(dealData) => addDeal(dealData)}
+          onImport={(dealsArray) => bulkAddDeals(dealsArray)}
         />
       )}
 

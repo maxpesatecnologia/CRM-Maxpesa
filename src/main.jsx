@@ -5,15 +5,18 @@ import App from './App.jsx'
 import { CRMProvider } from './context/CRMContext.jsx'
 import { AuthProvider } from './context/AuthContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
+import ErrorBoundary from './components/ErrorBoundary.jsx'
 
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <AuthProvider>
-      <ToastProvider>
-        <CRMProvider>
-          <App />
-        </CRMProvider>
-      </ToastProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <ToastProvider>
+          <CRMProvider>
+            <App />
+          </CRMProvider>
+        </ToastProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   </StrictMode>,
 )

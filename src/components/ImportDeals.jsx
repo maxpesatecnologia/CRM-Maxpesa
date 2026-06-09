@@ -1,6 +1,6 @@
 import { useState, useRef } from 'react';
 import * as XLSX from 'xlsx';
-import { X, Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
+import { X, Upload, FileSpreadsheet, CheckCircle, Loader2 } from 'lucide-react';
 
 // Mapeamento de nomes de coluna da planilha → campos do deal
 const COLUMN_ALIASES = {
@@ -138,17 +138,18 @@ export default function ImportDeals({ onClose, onImport }) {
   const handleImport = async () => {
     setStep('importing');
     setProgress({ done: 0, total: deals.length, errors: [] });
-    const errors = [];
-    for (let i = 0; i < deals.length; i++) {
-      try {
-        await onImport(deals[i]);
-      } catch (err) {
-        errors.push({ index: i, empresa: deals[i].empresa, msg: err.message });
+    try {
+      const result = await onImport(deals);
+      if (result && result.success) {
+        setProgress({ done: result.count, total: deals.length, errors: [] });
+      } else {
+        const msg = result?.error?.message || 'Erro desconhecido';
+        setProgress({ done: 0, total: deals.length, errors: [{ empresa: 'Geral', msg }] });
       }
-      setProgress({ done: i + 1, total: deals.length, errors });
+    } catch (err) {
+      setProgress({ done: 0, total: deals.length, errors: [{ empresa: 'Geral', msg: err.message }] });
     }
     setStep('done');
-    setProgress(p => ({ ...p, errors }));
   };
 
   return (
