@@ -23,7 +23,7 @@ function ToastItem({ toast, onClose }) {
     }}>
       <Icon size={17} color={v.border} style={{ flexShrink: 0, marginTop: 1 }} />
       <span style={{ flex: 1, fontSize: '13.5px', color: v.text, lineHeight: 1.45 }}>
-        {toast.message}
+        {typeof toast.message === 'object' ? JSON.stringify(toast.message) : String(toast.message ?? '')}
       </span>
       <button
         onClick={() => onClose(toast.id)}

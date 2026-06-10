@@ -4,30 +4,35 @@ import { supabase } from '../lib/supabase';
 import { useToast } from './ToastContext';
 
 // Normaliza as colunas que o Supabase retorna em minúsculo de volta para camelCase
+const safeStr = (v) => (v == null ? null : (typeof v === 'object' ? JSON.stringify(v) : String(v)));
+
 const normalizeDeal = (d) => {
   const n = {
     ...d,
-    nomeNegocacao:  d.nomeNegocacao  ?? d.nomenegocacao  ?? '',
-    etapaId:        d.etapaId        ?? d.etapaid        ?? 'etapa-1',
-    valorUnico:      Number(d.valorUnico      ?? d.valorunico      ?? 0),
-    valorRecorrente: Number(d.valorRecorrente ?? d.valorrecorrente ?? 0),
-    motivoPerda:    d.motivoPerda    ?? d.motivoperda    ?? null,
-    dataCriacao:    d.dataCriacao    ?? d.datacriacao    ?? null,
-    dataFechamento: d.dataFechamento ?? d.datafechamento ?? null,
-    anexo:          d.anexo          ?? d.anexo          ?? null,
-    anexoNome:      d.anexoNome      ?? d.anexonome      ?? null,
+    nomeNegocacao:   safeStr(d.nomeNegocacao)  ?? '',
+    etapaId:         safeStr(d.etapaId  ?? d.etapaid)  ?? 'etapa-1',
+    valorUnico:       Number(d.valorUnico      ?? d.valorunico      ?? 0),
+    valorRecorrente:  Number(d.valorRecorrente ?? d.valorrecorrente ?? 0),
+    motivoPerda:     safeStr(d.motivoPerda  ?? d.motivoperda),
+    dataCriacao:     safeStr(d.dataCriacao  ?? d.datacriacao),
+    dataFechamento:  safeStr(d.dataFechamento ?? d.datafechamento),
+    anexo:           safeStr(d.anexo),
+    anexoNome:       safeStr(d.anexoNome),
+    empresa:         safeStr(d.empresa) ?? '',
+    fonte:           safeStr(d.fonte),
+    campanha:        safeStr(d.campanha),
+    produto:         safeStr(d.produto),
+    vendedor:        safeStr(d.vendedor),
   };
-  
-  // Limpa campos duplicados (mantém apenas camelCase na UI)
-  if ('nomenegocacao' in n) delete n.nomenegocacao;
-  if ('etapaid' in n) delete n.etapaid;
-  if ('valorunico' in n) delete n.valorunico;
+
+  // Limpa campos duplicados lowercase (mantém apenas camelCase na UI)
+  if ('etapaid'        in n) delete n.etapaid;
+  if ('valorunico'     in n) delete n.valorunico;
   if ('valorrecorrente' in n) delete n.valorrecorrente;
-  if ('motivoperda' in n) delete n.motivoperda;
-  if ('datacriacao' in n) delete n.datacriacao;
+  if ('motivoperda'    in n) delete n.motivoperda;
+  if ('datacriacao'    in n) delete n.datacriacao;
   if ('datafechamento' in n) delete n.datafechamento;
-  if ('anexonome' in n) delete n.anexonome;
-  
+
   return n;
 };
 
@@ -35,15 +40,14 @@ const normalizeDeal = (d) => {
 const toDbDeal = (d) => {
   const out = { ...d };
   
-  // Mapeamentos necessários (colunas que são lowercase no Postgres)
-  if ('nomeNegocacao' in out) { out.nomenegocacao = out.nomeNegocacao; delete out.nomeNegocacao; }
-  if ('etapaId' in out) { out.etapaid = out.etapaId; delete out.etapaId; }
-  if ('valorUnico' in out) { out.valorunico = out.valorUnico; delete out.valorUnico; }
+  // Mapeamentos camelCase → snake_case/lowercase conforme nomes reais no banco
+  // nomeNegocacao e anexoNome são camelCase no banco (mantidos como estão)
+  if ('etapaId'        in out) { out.etapaid        = out.etapaId;        delete out.etapaId; }
+  if ('valorUnico'     in out) { out.valorunico      = out.valorUnico;     delete out.valorUnico; }
   if ('valorRecorrente' in out) { out.valorrecorrente = out.valorRecorrente; delete out.valorRecorrente; }
-  if ('motivoPerda' in out) { out.motivoperda = out.motivoPerda; delete out.motivoPerda; }
-  if ('dataCriacao' in out) { out.datacriacao = out.dataCriacao; delete out.dataCriacao; }
-  if ('dataFechamento' in out) { out.datafechamento = out.dataFechamento; delete out.dataFechamento; }
-  if ('anexoNome' in out) { out.anexonome = out.anexoNome; delete out.anexoNome; }
+  if ('motivoPerda'    in out) { out.motivoperda     = out.motivoPerda;    delete out.motivoPerda; }
+  if ('dataCriacao'    in out) { out.datacriacao     = out.dataCriacao;    delete out.dataCriacao; }
+  if ('dataFechamento' in out) { out.datafechamento  = out.dataFechamento; delete out.dataFechamento; }
 
   // Tratamento de campos vazios para tipos específicos (Date, Number)
   // O Postgres rejeita "" para colunas de data ou número
@@ -54,10 +58,11 @@ const toDbDeal = (d) => {
   numFields.forEach(f =>  { if (out[f] === '') out[f] = 0;    });
 
   // Lista branca de colunas permitidas na tabela 'deals' para evitar erros 400
+  // Nomes exatos das colunas no banco (nomeNegocacao e anexoNome são camelCase no Supabase)
   const allowedColumns = [
-    'id', 'created_at', 'empresa', 'nomenegocacao', 'valorunico', 'valorrecorrente', 
-    'fonte', 'campanha', 'etapaid', 'motivoperda', 'datacriacao', 
-    'datafechamento', 'produto', 'vendedor', 'anexo', 'anexonome'
+    'id', 'created_at', 'empresa', 'nomeNegocacao', 'valorunico', 'valorrecorrente',
+    'fonte', 'campanha', 'etapaid', 'motivoperda', 'datacriacao',
+    'datafechamento', 'produto', 'vendedor', 'anexo', 'anexoNome'
   ];
 
   // Filtra o objeto para conter apenas as colunas válidas
@@ -366,13 +371,14 @@ export const CRMProvider = ({ children }) => {
 
   const bulkAddDeals = async (dealsArray) => {
     const today = format(new Date(), 'yyyy-MM-dd');
-    // Garante datacriacao preenchida antes de converter para o schema do banco
     const withDefaults = dealsArray.map(d => ({
       ...d,
       dataCriacao: d.dataCriacao || d.datacriacao || today,
     }));
     const dbDeals = withDefaults.map(toDbDeal);
+
     const { data, error } = await supabase.from('deals').insert(dbDeals).select();
+
     if (!error && data) {
       const normalized = data.map(normalizeDeal);
       setDeals(prev => [...normalized, ...prev]);
@@ -380,8 +386,9 @@ export const CRMProvider = ({ children }) => {
       return { success: true, count: data.length };
     } else {
       console.error("Erro na importação em massa:", error);
-      toast.error('Erro na importação: ' + (error?.message || 'Erro desconhecido'));
-      return { success: false, error };
+      const errMsg = String(error?.message || error?.details || 'Erro desconhecido');
+      toast.error('Erro na importação: ' + errMsg);
+      return { success: false, error: errMsg };
     }
   };
 

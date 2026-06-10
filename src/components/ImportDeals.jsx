@@ -143,11 +143,12 @@ export default function ImportDeals({ onClose, onImport }) {
       if (result && result.success) {
         setProgress({ done: result.count, total: deals.length, errors: [] });
       } else {
-        const msg = result?.error?.message || 'Erro desconhecido';
+        const rawErr = result?.error;
+        const msg = String(rawErr?.message || rawErr || 'Erro desconhecido');
         setProgress({ done: 0, total: deals.length, errors: [{ empresa: 'Geral', msg }] });
       }
     } catch (err) {
-      setProgress({ done: 0, total: deals.length, errors: [{ empresa: 'Geral', msg: err.message }] });
+      setProgress({ done: 0, total: deals.length, errors: [{ empresa: 'Geral', msg: String(err?.message || err || 'Erro inesperado') }] });
     }
     setStep('done');
   };
@@ -290,7 +291,7 @@ export default function ImportDeals({ onClose, onImport }) {
             </p>
             {progress.errors.length > 0 && (
               <div style={{ background: '#fff5f5', borderRadius: '8px', padding: '1rem', marginTop: '1rem', textAlign: 'left', fontSize: '0.82rem', color: 'var(--danger-color)', maxHeight: '150px', overflowY: 'auto' }}>
-                {progress.errors.map((e, i) => <div key={i}>• {e.empresa}: {e.msg}</div>)}
+                {progress.errors.map((e, i) => <div key={i}>• {e.empresa}: {String(e.msg ?? '')}</div>)}
               </div>
             )}
             <button onClick={onClose} style={{ marginTop: '1.5rem', padding: '0.7rem 2rem', borderRadius: '8px', border: 'none', background: 'var(--primary-color)', color: 'white', fontWeight: '700', cursor: 'pointer' }}>
