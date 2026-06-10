@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { DndContext, useSensor, useSensors, PointerSensor, closestCenter } from '@dnd-kit/core';
 import { useCRM } from '../context/CRMContext';
-import { Plus, Building2, Calendar, DollarSign, X, Edit2, Trash2, Paperclip, FileText, Sparkles, UserCheck, HardHat, Search, Handshake, XCircle, Trophy, Upload } from 'lucide-react';
+import { Plus, Building2, Calendar, DollarSign, X, Edit2, Trash2, Paperclip, FileText, Sparkles, UserCheck, HardHat, Search, Handshake, XCircle, Trophy, Upload, Trash } from 'lucide-react';
 import { useDraggable, useDroppable } from '@dnd-kit/core';
 import ImportDeals from '../components/ImportDeals';
 import './Pipeline.css';
@@ -173,7 +173,7 @@ const Column = ({ title, id, deals, onEdit, onDelete }) => {
 
 // --- Main Pipeline Component ---
 const Pipeline = () => {
-  const { stages, deals, moveDeal, addDeal, bulkAddDeals, updateDeal, deleteDeal, lossReasons, fleet, contacts, campaigns, leadSources, users } = useCRM();
+  const { stages, deals, moveDeal, addDeal, bulkAddDeals, clearAllDeals, updateDeal, deleteDeal, lossReasons, fleet, contacts, campaigns, leadSources, users } = useCRM();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [lossModalOpen, setLossModalOpen] = useState(false);
   const [pendingMove, setPendingMove] = useState(null);
@@ -358,6 +358,17 @@ const Pipeline = () => {
           <p>Mova as negociações entre as etapas do funil</p>
         </div>
         <div style={{ display: 'flex', gap: '0.75rem' }}>
+          <button
+            className="btn-secondary"
+            style={{ color: '#dc2626', borderColor: '#fca5a5' }}
+            onClick={() => {
+              if (window.confirm(`Tem certeza? Isso vai apagar TODOS os ${deals.length} negócios permanentemente. Essa ação não pode ser desfeita.`)) {
+                clearAllDeals();
+              }
+            }}
+          >
+            <Trash size={16} /> Limpar Negócios
+          </button>
           <button className="btn-secondary" onClick={() => setImportOpen(true)}>
             <Upload size={18} /> Importar Planilha
           </button>

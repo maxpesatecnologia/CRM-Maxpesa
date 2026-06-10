@@ -14,20 +14,24 @@ const COLUMN_ALIASES = {
   vendedor:        ['vendedor', 'responsavel', 'responsável', 'consultor', 'seller'],
   fonte:           ['fonte', 'origem', 'source'],
   campanha:        ['campanha', 'campaign'],
-  produto:         ['produto', 'equipamento', 'product'],
+  produto:         ['produto', 'equipamento', 'product', 'equip', 'veiculo', 'veículo', 'frota', 'tipo equip', 'tipo de equipamento', 'modelo'],
   motivoPerda:     ['motivo perda', 'motivoperda', 'motivo', 'motivo de perda'],
 };
 
-// Mapeamento de nomes de etapa → IDs
+// Remove acentos e normaliza string para lookup de etapa
+const normalizeStage = (s) =>
+  String(s || '').toLowerCase().trim().normalize('NFD').replace(/[̀-ͯ]/g, '');
+
+// Mapeamento de nomes de etapa → IDs (chaves sem acento após normalização)
 const STAGE_MAP = {
-  'lead gerado':         'etapa-1', 'lead':           'etapa-1',
-  'lead qualificado':    'etapa-2', 'qualificado':    'etapa-2',
-  'vistoria':            'etapa-3', 'vistoria tecnica': 'etapa-3',
-  'proposta':            'etapa-4', 'proposta comercial': 'etapa-4',
-  'pesquisa':            'etapa-5', 'pesquisa de preco': 'etapa-5',
-  'negociacao':          'etapa-6', 'negociação':     'etapa-6',
-  'perdemos':            'etapa-7', 'perdido':        'etapa-7', 'lost': 'etapa-7',
-  'vencemos':            'etapa-8', 'ganho':          'etapa-8', 'won': 'etapa-8', 'fechado': 'etapa-8',
+  'lead gerado':          'etapa-1', 'lead':               'etapa-1',
+  'lead qualificado':     'etapa-2', 'qualificado':        'etapa-2', 'qualificacao do lead': 'etapa-2',
+  'vistoria':             'etapa-3', 'vistoria tecnica':   'etapa-3',
+  'proposta':             'etapa-4', 'proposta comercial': 'etapa-4',
+  'pesquisa':             'etapa-5', 'pesquisa de preco':  'etapa-5',
+  'negociacao':           'etapa-6', 'em negociacao': 'etapa-6',
+  'perdemos':             'etapa-7', 'perdido':            'etapa-7', 'lost': 'etapa-7',
+  'vencemos':             'etapa-8', 'ganho':              'etapa-8', 'won': 'etapa-8', 'fechado': 'etapa-8',
 };
 
 // Converte data do Excel para YYYY-MM-DD
@@ -76,8 +80,8 @@ const rowToDeal = (row, mapping) => {
     return col !== undefined ? row[col] : undefined;
   };
 
-  const etapaRaw = String(get('etapaId') || '').toLowerCase().trim();
-  const etapaId = STAGE_MAP[etapaRaw] || 'etapa-1';
+  const etapaRaw = normalizeStage(get('etapaId'));
+  const etapaId = STAGE_MAP[etapaRaw] || (etapaRaw.startsWith('etapa-') ? etapaRaw : 'etapa-1');
 
   return {
     empresa:         String(get('empresa') || '').trim(),
@@ -100,7 +104,7 @@ const FIELD_LABELS = {
   dataCriacao: 'Data de Criação', dataFechamento: 'Data de Fechamento',
   valorUnico: 'Valor Único (R$)', valorRecorrente: 'Valor Recorrente (R$)',
   etapaId: 'Etapa do Funil', vendedor: 'Vendedor',
-  fonte: 'Fonte', campanha: 'Campanha', produto: 'Produto',
+  fonte: 'Fonte', campanha: 'Campanha', produto: 'Produto / Equipamento',
 };
 
 export default function ImportDeals({ onClose, onImport }) {

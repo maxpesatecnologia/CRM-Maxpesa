@@ -479,6 +479,16 @@ export const CRMProvider = ({ children }) => {
     else console.error("Erro ao deletar negócio:", error);
   };
 
+  const clearAllDeals = async () => {
+    const { error } = await supabase.from('deals').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    if (!error) {
+      setDeals([]);
+      toast.success('Todos os negócios foram removidos.');
+    } else {
+      toast.error('Erro ao limpar negócios: ' + String(error?.message || error));
+    }
+  };
+
   const deleteContact = async (contactId) => {
     const { error } = await supabase.from('contacts').delete().eq('id', contactId);
     if (!error) setContacts(prev => prev.filter(c => c.id !== contactId));
@@ -590,6 +600,7 @@ export const CRMProvider = ({ children }) => {
       addPerson,
       bulkAddContacts,
       bulkAddDeals,
+      clearAllDeals,
       updateDeal,
       updateContact,
       updateFleetItem,
