@@ -51,6 +51,11 @@ const Sidebar = () => {
           <BarChart2 size={20} className="nav-icon" />
           <span className="nav-text">Relatórios</span>
         </NavLink>
+
+        <NavLink to="/usuarios" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+          <UserCircle2 size={20} className="nav-icon" />
+          <span className="nav-text">Usuários</span>
+        </NavLink>
       </div>
       
       <div className="sidebar-footer" style={{ marginTop: 'auto', padding: '1rem 0' }}>
@@ -89,10 +94,6 @@ const Sidebar = () => {
                <NavLink to="/motivos-perda" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} style={{ margin: '0', borderRadius: '0', padding: '0.6rem 1rem 0.6rem 2.5rem' }}>
                  <XSquare size={16} className="nav-icon" style={{ marginRight: '0.75rem' }} />
                  <span className="nav-text" style={{ fontSize: '0.85rem' }}>Motivos de Perda</span>
-               </NavLink>
-               <NavLink to="/usuarios" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} style={{ margin: '0', borderRadius: '0', padding: '0.6rem 1rem 0.6rem 2.5rem' }}>
-                 <UserCircle2 size={16} className="nav-icon" style={{ marginRight: '0.75rem' }} />
-                 <span className="nav-text" style={{ fontSize: '0.85rem' }}>Usuários</span>
                </NavLink>
              </div>
            )}
