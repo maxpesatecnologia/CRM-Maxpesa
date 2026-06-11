@@ -385,7 +385,9 @@ const Pipeline = () => {
               key={stage.id} 
               id={stage.id} 
               title={stage.title} 
-              deals={deals.filter(d => d.etapaId === stage.id)}
+              deals={deals
+                .filter(d => d.etapaId === stage.id)
+                .sort((a, b) => new Date(b.dataCriacao || b.datacriacao || 0) - new Date(a.dataCriacao || a.datacriacao || 0))}
               onEdit={handleEditDeal}
               onDelete={handleDeleteDeal}
             />
