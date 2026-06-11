@@ -177,7 +177,7 @@ export const CRMProvider = ({ children }) => {
           { data: peopleData },
           { data: attachmentsData }
         ] = await Promise.all([
-          supabase.from('deals').select('*').order('created_at', { ascending: false }),
+          supabase.from('deals').select('*').order('created_at', { ascending: false }).range(0, 9999),
           supabase.from('contacts').select('*').order('empresa'),
           supabase.from('fleet').select('*').order('nome'),
           supabase.from('tasks').select('*').order('created_at', { ascending: false }),
