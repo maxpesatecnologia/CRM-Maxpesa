@@ -164,6 +164,20 @@ export const CRMProvider = ({ children }) => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
+        const fetchAllDeals = async () => {
+          let allDeals = [];
+          let from = 0;
+          const step = 1000;
+          while (true) {
+            const { data, error } = await supabase.from('deals').select('*').order('created_at', { ascending: false }).range(from, from + step - 1);
+            if (error || !data) break;
+            allDeals = [...allDeals, ...data];
+            if (data.length < step) break;
+            from += step;
+          }
+          return { data: allDeals };
+        };
+
         const [
           { data: dealsData },
           { data: contactsData },
@@ -177,7 +191,7 @@ export const CRMProvider = ({ children }) => {
           { data: peopleData },
           { data: attachmentsData }
         ] = await Promise.all([
-          supabase.from('deals').select('*').order('created_at', { ascending: false }).range(0, 9999),
+          fetchAllDeals(),
           supabase.from('contacts').select('*').order('empresa'),
           supabase.from('fleet').select('*').order('nome'),
           supabase.from('tasks').select('*').order('created_at', { ascending: false }),
