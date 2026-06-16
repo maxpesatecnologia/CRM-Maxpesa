@@ -200,6 +200,34 @@ export const CRMProvider = ({ children }) => {
           return { data: allDeals };
         };
 
+        const fetchAllTasks = async () => {
+          let allTasks = [];
+          let from = 0;
+          const step = 1000;
+          while (true) {
+            const { data, error } = await supabase.from('tasks').select('*').order('created_at', { ascending: false }).range(from, from + step - 1);
+            if (error || !data) break;
+            allTasks = [...allTasks, ...data];
+            if (data.length < step) break;
+            from += step;
+          }
+          return { data: allTasks };
+        };
+
+        const fetchAllContacts = async () => {
+          let allContacts = [];
+          let from = 0;
+          const step = 1000;
+          while (true) {
+            const { data, error } = await supabase.from('contacts').select('*').order('empresa').range(from, from + step - 1);
+            if (error || !data) break;
+            allContacts = [...allContacts, ...data];
+            if (data.length < step) break;
+            from += step;
+          }
+          return { data: allContacts };
+        };
+
         const [
           { data: dealsData },
           { data: contactsData },
@@ -214,9 +242,9 @@ export const CRMProvider = ({ children }) => {
           { data: attachmentsData }
         ] = await Promise.all([
           fetchAllDeals(),
-          supabase.from('contacts').select('*').order('empresa'),
+          fetchAllContacts(),
           supabase.from('fleet').select('*').order('nome'),
-          supabase.from('tasks').select('*').order('created_at', { ascending: false }),
+          fetchAllTasks(),
           supabase.from('users_crm').select('*').order('nome'),
           supabase.from('campaigns').select('*').order('nome'),
           supabase.from('lead_sources').select('*').order('nome'),
@@ -395,13 +423,30 @@ export const CRMProvider = ({ children }) => {
   };
 
   const bulkAddContacts = async (contactsArray) => {
-    const { data, error } = await supabase.from('contacts').insert(contactsArray).select();
-    if (!error && data) {
-      setContacts(prev => [...data, ...prev]);
-      return { success: true, count: data.length };
+    const chunkSize = 500;
+    let allData = [];
+    let hasError = false;
+    let lastError = null;
+
+    for (let i = 0; i < contactsArray.length; i += chunkSize) {
+      const chunk = contactsArray.slice(i, i + chunkSize);
+      const { data, error } = await supabase.from('contacts').insert(chunk).select();
+      if (error) {
+        console.error("Erro na importação de chunk de contatos:", error);
+        hasError = true;
+        lastError = error;
+        break;
+      } else if (data) {
+        allData = [...allData, ...data];
+      }
+    }
+
+    if (!hasError) {
+      setContacts(prev => [...allData, ...prev]);
+      return { success: true, count: allData.length };
     } else {
-      console.error("Erro na importação em massa de contatos:", error);
-      return { success: false, error };
+      console.error("Erro na importação em massa de contatos:", lastError);
+      return { success: false, error: lastError };
     }
   };
 
@@ -413,16 +458,31 @@ export const CRMProvider = ({ children }) => {
     }));
     const dbDeals = withDefaults.map(toDbDeal);
 
-    const { data, error } = await supabase.from('deals').insert(dbDeals).select();
+    const chunkSize = 500;
+    let allData = [];
+    let hasError = false;
+    let lastError = null;
 
-    if (!error && data) {
-      const normalized = data.map(normalizeDeal);
+    for (let i = 0; i < dbDeals.length; i += chunkSize) {
+      const chunk = dbDeals.slice(i, i + chunkSize);
+      const { data, error } = await supabase.from('deals').insert(chunk).select();
+      if (error) {
+        console.error("Erro na importação de chunk de negócios:", error);
+        hasError = true;
+        lastError = error;
+        break;
+      } else if (data) {
+        allData = [...allData, ...data];
+      }
+    }
+
+    if (!hasError) {
+      const normalized = allData.map(normalizeDeal);
       setDeals(prev => [...normalized, ...prev]);
-      toast.success(`${data.length} negócio(s) importado(s) com sucesso!`);
-      return { success: true, count: data.length };
+      toast.success(`${allData.length} negócio(s) importado(s) com sucesso!`);
+      return { success: true, count: allData.length };
     } else {
-      console.error("Erro na importação em massa:", error);
-      const errMsg = String(error?.message || error?.details || 'Erro desconhecido');
+      const errMsg = String(lastError?.message || lastError?.details || 'Erro desconhecido');
       toast.error('Erro na importação: ' + errMsg);
       return { success: false, error: errMsg };
     }
@@ -430,15 +490,31 @@ export const CRMProvider = ({ children }) => {
 
   const bulkAddTasks = async (tasksArray) => {
     const dbTasks = tasksArray.map(toDbTask);
-    const { data, error } = await supabase.from('tasks').insert(dbTasks).select();
-    if (!error && data) {
-      const normalized = data.map(normalizeTask);
+    const chunkSize = 500;
+    let allData = [];
+    let hasError = false;
+    let lastError = null;
+
+    for (let i = 0; i < dbTasks.length; i += chunkSize) {
+      const chunk = dbTasks.slice(i, i + chunkSize);
+      const { data, error } = await supabase.from('tasks').insert(chunk).select();
+      if (error) {
+        console.error("Erro na importação do chunk:", error);
+        hasError = true;
+        lastError = error;
+        break; // Stop on first error, or could continue
+      } else if (data) {
+        allData = [...allData, ...data];
+      }
+    }
+
+    if (!hasError) {
+      const normalized = allData.map(normalizeTask);
       setTasks(prev => [...normalized, ...prev]);
-      toast.success(`${data.length} tarefa(s) importada(s) com sucesso!`);
-      return { success: true, count: data.length };
+      toast.success(`${allData.length} tarefa(s) importada(s) com sucesso!`);
+      return { success: true, count: allData.length };
     } else {
-      console.error("Erro na importação de tarefas:", error);
-      const errMsg = String(error?.message || error?.details || 'Erro desconhecido');
+      const errMsg = String(lastError?.message || lastError?.details || 'Erro desconhecido');
       toast.error('Erro na importação: ' + errMsg);
       return { success: false, error: errMsg };
     }
@@ -538,6 +614,16 @@ export const CRMProvider = ({ children }) => {
       toast.success('Todos os negócios foram removidos.');
     } else {
       toast.error('Erro ao limpar negócios: ' + String(error?.message || error));
+    }
+  };
+
+  const clearAllTasks = async () => {
+    const { error } = await supabase.from('tasks').delete().neq('id', '00000000-0000-0000-0000-000000000000');
+    if (!error) {
+      setTasks([]);
+      toast.success('Todas as tarefas foram removidas.');
+    } else {
+      toast.error('Erro ao limpar tarefas: ' + String(error?.message || error));
     }
   };
 
@@ -654,6 +740,7 @@ export const CRMProvider = ({ children }) => {
       bulkAddDeals,
       bulkAddTasks,
       clearAllDeals,
+      clearAllTasks,
       updateDeal,
       updateContact,
       updateFleetItem,

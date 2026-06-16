@@ -78,8 +78,8 @@ const parseTime = (val) => {
 const normalizeStatus = (val) => {
   if (!val) return 'Pendente';
   const s = String(val).toLowerCase().trim();
-  if (s.includes('conclu')) return 'Concluída';
-  if (s.includes('andamento')) return 'Em andamento';
+  if (s.includes('conclu') || s.includes('complet') || s.includes('finaliz') || s.includes('resolvid')) return 'Concluída';
+  if (s.includes('andamento') || s.includes('progresso')) return 'Em andamento';
   if (s.includes('atras')) return 'Atrasada';
   return 'Pendente';
 };
@@ -115,6 +115,7 @@ const rowToTask = (row, mapping) => {
   const statusRaw = normalizeStatus(get('status'));
 
   return {
+    titulo:          String(get('assunto') || '').trim(),
     empresa:         String(get('empresa') || '').trim(),
     negociacao:      String(get('negociacao') || '').trim(),
     assunto:         String(get('assunto') || '').trim(),

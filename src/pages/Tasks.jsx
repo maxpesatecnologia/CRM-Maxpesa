@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { useCRM } from '../context/CRMContext';
-import { Plus, Search, Calendar, Filter, Phone, MessageCircle, FileText, CheckSquare, Info, X, Video, Users, UserCircle2, Hash, ArrowUp, Briefcase, ChevronDown, Upload } from 'lucide-react';
+import { Plus, Search, Calendar, Filter, Phone, MessageCircle, FileText, CheckSquare, Info, X, Video, Users, UserCircle2, Hash, ArrowUp, Briefcase, ChevronDown, Upload, Trash2 } from 'lucide-react';
 import { format, isPast, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import ImportTasks from '../components/ImportTasks';
 import './Tasks.css';
 
 const Tasks = () => {
-  const { tasks, contacts, users, addTask, updateTask, deleteTask, bulkAddTasks } = useCRM();
+  const { tasks, contacts, users, addTask, updateTask, deleteTask, bulkAddTasks, clearAllTasks } = useCRM();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
@@ -132,6 +132,7 @@ const Tasks = () => {
   };
 
   const getTaskIcon = (titulo) => {
+    if (!titulo) return <FileText size={16} className="task-type-icon text-muted" />;
     const titleLower = titulo.toLowerCase();
     if (titleLower.includes('lig') || titleLower.includes('phone') || titleLower.includes('follow')) return <Phone size={16} className="task-type-icon text-primary" />;
     if (titleLower.includes('whats') || titleLower.includes('msg') || titleLower.includes('mensagem')) return <MessageCircle size={16} className="task-type-icon text-success" />;
@@ -156,9 +157,18 @@ const Tasks = () => {
   };
 
   // Agrupamento para Resumo
+  let completedTasks = 0;
+  let overdueTasks = 0;
+  let pendingTasks = 0;
+  
+  tasks.forEach(t => {
+    const info = getTaskStatusInfo(t);
+    if (info.text === 'COMPLETA') completedTasks++;
+    else if (info.text === 'ATRASADA') overdueTasks++;
+    else pendingTasks++;
+  });
+  
   const totalTasks = tasks.length;
-  const completedTasks = tasks.filter(t => t.concluida).length;
-  const pendingTasks = totalTasks - completedTasks;
 
   // Ordenar por data
   const sortedTasks = [...tasks].sort((a, b) => new Date(b.dataHora) - new Date(a.dataHora));
@@ -170,6 +180,17 @@ const Tasks = () => {
         <h1>Tarefas</h1>
         <div className="tasks-header-actions">
           <button className="btn-icon"><Calendar size={20} /></button>
+          <button
+            className="btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem', borderRadius: '4px', border: '1px solid #EF4444', color: '#EF4444', background: 'white', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem' }}
+            onClick={() => {
+              if (window.confirm("Tem certeza que deseja excluir TODAS as tarefas? Esta ação não pode ser desfeita.")) {
+                clearAllTasks();
+              }
+            }}
+          >
+            <Trash2 size={16} /> Limpar
+          </button>
           <button
             className="btn-secondary"
             style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem', borderRadius: '4px', border: '1px solid #00609C', color: '#00609C', background: 'white', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem' }}
@@ -264,6 +285,10 @@ const Tasks = () => {
           <div className="stat-item">
             <span className="stat-value text-success">{completedTasks}</span>
             <span className="stat-label">Completas</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-value" style={{ color: '#EF4444' }}>{overdueTasks}</span>
+            <span className="stat-label">Atrasadas</span>
           </div>
           <div className="stat-item">
             <span className="stat-value text-warning">{pendingTasks}</span>
