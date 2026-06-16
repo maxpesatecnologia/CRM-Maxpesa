@@ -1,15 +1,17 @@
 import React, { useState } from 'react';
 import { useCRM } from '../context/CRMContext';
-import { Plus, Search, Calendar, Filter, Phone, MessageCircle, FileText, CheckSquare, Info, X, Video, Users, UserCircle2, Hash, ArrowUp, Briefcase, ChevronDown } from 'lucide-react';
+import { Plus, Search, Calendar, Filter, Phone, MessageCircle, FileText, CheckSquare, Info, X, Video, Users, UserCircle2, Hash, ArrowUp, Briefcase, ChevronDown, Upload } from 'lucide-react';
 import { format, isPast, parseISO } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import ImportTasks from '../components/ImportTasks';
 import './Tasks.css';
 
 const Tasks = () => {
-  const { tasks, contacts, users, addTask, updateTask, deleteTask } = useCRM();
+  const { tasks, contacts, users, addTask, updateTask, deleteTask, bulkAddTasks } = useCRM();
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null);
+  const [showImport, setShowImport] = useState(false);
 
   const [periodFilter, setPeriodFilter] = useState('Período');
   const [showDateModal, setShowDateModal] = useState(false);
@@ -25,48 +27,47 @@ const Tasks = () => {
     );
   };
 
-  const [formData, setFormData] = useState({
+  const emptyForm = {
     empresa: '',
     negociacao: '',
-    valor: '',
     assunto: '',
     descricao: '',
     vendedor: '',
     tipoTarefa: '',
+    dataCriacao: '',
+    horaCriacao: '',
     dataAgendamento: '',
     horario: '',
-    concluida: false
-  });
+    status: 'Pendente',
+    dataConclusao: '',
+    horaConclusao: '',
+    concluida: false,
+  };
+
+  const [formData, setFormData] = useState(emptyForm);
 
   const handleOpenModal = (task = null) => {
     if (task) {
       setEditingId(task.id);
       setFormData({
-        empresa: task.empresa || '',
-        negociacao: task.negociacao || '',
-        valor: task.valor || '',
-        assunto: task.assunto || '',
-        descricao: task.descricao || '',
-        vendedor: task.vendedor || '',
-        tipoTarefa: task.tipoTarefa || '',
+        empresa:         task.empresa         || '',
+        negociacao:      task.negociacao      || '',
+        assunto:         task.assunto         || '',
+        descricao:       task.descricao       || '',
+        vendedor:        task.vendedor        || '',
+        tipoTarefa:      task.tipoTarefa      || '',
+        dataCriacao:     task.dataCriacao     || '',
+        horaCriacao:     task.horaCriacao     || '',
         dataAgendamento: task.dataAgendamento || '',
-        horario: task.horario || '',
-        concluida: task.concluida
+        horario:         task.horario         || '',
+        status:          task.status          || (task.concluida ? 'Concluída' : 'Pendente'),
+        dataConclusao:   task.dataConclusao   || '',
+        horaConclusao:   task.horaConclusao   || '',
+        concluida:       task.concluida       || false,
       });
     } else {
       setEditingId(null);
-      setFormData({
-        empresa: '',
-        negociacao: '',
-        valor: '',
-        assunto: '',
-        descricao: '',
-        vendedor: '',
-        tipoTarefa: '',
-        dataAgendamento: '',
-        horario: '',
-        concluida: false
-      });
+      setFormData(emptyForm);
     }
     setIsModalOpen(true);
   };
@@ -86,22 +87,26 @@ const Tasks = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!formData.assunto || !formData.dataAgendamento) return;
+    if (!formData.assunto) return;
 
-    // Campos mapeados para os nomes exatos que a tabela tasks aceita
-    // toDbTask() no CRMContext converte tipoTarefa→tipotarefa e dataAgendamento→dataagendamento
+    const concluida = formData.status === 'Concluída';
+
     const payload = {
       titulo:          formData.assunto,
       assunto:         formData.assunto,
       descricao:       formData.descricao,
       empresa:         formData.empresa,
       negociacao:      formData.negociacao,
-      valor:           Number(formData.valor) || 0,
       vendedor:        formData.vendedor,
       tipoTarefa:      formData.tipoTarefa,
-      dataAgendamento: formData.dataAgendamento,
-      horario:         formData.horario || '00:00',
-      concluida:       formData.concluida,
+      dataCriacao:     formData.dataCriacao   || null,
+      horaCriacao:     formData.horaCriacao   || null,
+      dataAgendamento: formData.dataAgendamento || null,
+      horario:         formData.horario        || null,
+      status:          formData.status,
+      dataConclusao:   formData.dataConclusao  || null,
+      horaConclusao:   formData.horaConclusao  || null,
+      concluida,
     };
 
     if (editingId) {
@@ -165,6 +170,13 @@ const Tasks = () => {
         <h1>Tarefas</h1>
         <div className="tasks-header-actions">
           <button className="btn-icon"><Calendar size={20} /></button>
+          <button
+            className="btn-secondary"
+            style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', padding: '0.5rem 1rem', borderRadius: '4px', border: '1px solid #00609C', color: '#00609C', background: 'white', fontWeight: '600', cursor: 'pointer', fontSize: '0.9rem' }}
+            onClick={() => setShowImport(true)}
+          >
+            <Upload size={16} /> Importar
+          </button>
           <button className="btn-primary" onClick={() => handleOpenModal()}>
             Criar tarefa
           </button>
@@ -351,23 +363,21 @@ const Tasks = () => {
       {/* MODAL NOVA/EDITAR TAREFA */}
       {isModalOpen && (
         <div className="modal-overlay">
-          <div className="modal-content" style={{ maxWidth: '680px', maxHeight: '90vh', overflowY: 'auto' }}>
+          <div className="modal-content task-modal">
             <div className="modal-header">
               <h2>{editingId ? 'Editar Tarefa' : 'Nova Tarefa'}</h2>
               <button type="button" onClick={handleCloseModal} className="close-btn"><X size={24}/></button>
             </div>
-            
+
             <form onSubmit={handleSubmit} className="task-form">
 
-              {/* LINHA 1: Empresa + Negociacao */}
+              {/* ── 1. Empresa + Negociação ── */}
               <div className="form-row">
                 <div className="form-group flex-1">
                   <label>Empresa *</label>
                   <select
                     value={formData.empresa}
-                    onChange={(e) => {
-                      setFormData({...formData, empresa: e.target.value, dealId: ''});
-                    }}
+                    onChange={(e) => setFormData({...formData, empresa: e.target.value})}
                     required
                   >
                     <option value="">Selecione a empresa...</option>
@@ -388,22 +398,9 @@ const Tasks = () => {
                 </div>
               </div>
 
-              {/* VALOR DA NEGOCIAÇÃO */}
+              {/* ── 2. Assunto ── */}
               <div className="form-group">
-                <label>Valor da Negociação (R$) — opcional</label>
-                <input
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={formData.valor}
-                  onChange={(e) => setFormData({...formData, valor: e.target.value})}
-                  placeholder="0,00"
-                />
-              </div>
-
-              {/* LINHA 2: Assunto da Tarefa */}
-              <div className="form-group">
-                <label>Assunto da Tarefa *</label>
+                <label>Assunto *</label>
                 <input
                   type="text"
                   value={formData.assunto}
@@ -413,7 +410,7 @@ const Tasks = () => {
                 />
               </div>
 
-              {/* LINHA 3: Descricao */}
+              {/* ── 3. Descrição da Tarefa ── */}
               <div className="form-group">
                 <label>Descrição da Tarefa</label>
                 <textarea
@@ -425,15 +422,15 @@ const Tasks = () => {
                 />
               </div>
 
-              {/* LINHA 4: Vendedor + Tipo de Tarefa */}
+              {/* ── 4. Responsável + Tipo de Tarefa ── */}
               <div className="form-row">
                 <div className="form-group flex-1">
-                  <label>Vendedor Responsável</label>
+                  <label>Responsável</label>
                   <select
                     value={formData.vendedor}
                     onChange={(e) => setFormData({...formData, vendedor: e.target.value})}
                   >
-                    <option value="">Selecione o vendedor...</option>
+                    <option value="">Selecione o responsável...</option>
                     {users
                       .filter(u => u.status === 'Ativo')
                       .map(u => (
@@ -457,20 +454,40 @@ const Tasks = () => {
                 </div>
               </div>
 
-              {/* LINHA 5: Data de Agendamento + Horário */}
+              {/* ── 5. Data de Criação + Hora de Criação ── */}
+              <div className="form-section-label">Data de Criação</div>
               <div className="form-row">
                 <div className="form-group flex-1">
-                  <label>Data do Agendamento *</label>
+                  <label>Data de Criação</label>
+                  <input
+                    type="date"
+                    value={formData.dataCriacao}
+                    onChange={(e) => setFormData({...formData, dataCriacao: e.target.value})}
+                  />
+                </div>
+                <div className="form-group flex-1">
+                  <label>Hora de Criação</label>
+                  <input
+                    type="time"
+                    value={formData.horaCriacao}
+                    onChange={(e) => setFormData({...formData, horaCriacao: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              {/* ── 6. Data Agendada + Hora Agendada ── */}
+              <div className="form-section-label">Data Agendada</div>
+              <div className="form-row">
+                <div className="form-group flex-1">
+                  <label>Data Agendada</label>
                   <input
                     type="date"
                     value={formData.dataAgendamento}
                     onChange={(e) => setFormData({...formData, dataAgendamento: e.target.value})}
-                    required
                   />
                 </div>
-
                 <div className="form-group flex-1">
-                  <label>Horário</label>
+                  <label>Hora Agendada</label>
                   <input
                     type="time"
                     value={formData.horario}
@@ -479,21 +496,45 @@ const Tasks = () => {
                 </div>
               </div>
 
-              {/* LINHA 6: Marcar como Concluida */}
-              <div style={{ borderTop: '1px solid var(--border-color)', paddingTop: '1rem', marginTop: '0.5rem' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', cursor: 'pointer', margin: 0 }}>
-                  <input
-                    type="checkbox"
-                    style={{ width: '20px', height: '20px', margin: 0, accentColor: '#10B981' }}
-                    checked={formData.concluida}
-                    onChange={(e) => setFormData({...formData, concluida: e.target.checked})}
-                  />
-                  <span style={{ color: formData.concluida ? '#10B981' : 'var(--text-main)', fontWeight: 600, fontSize: '0.95rem' }}>
-                    {formData.concluida ? '✓ Tarefa Concluída' : 'Marcar como Concluída'}
-                  </span>
-                </label>
+              {/* ── 7. Status ── */}
+              <div className="form-group">
+                <label>Status</label>
+                <select
+                  value={formData.status}
+                  onChange={(e) => {
+                    const s = e.target.value;
+                    setFormData({...formData, status: s, concluida: s === 'Concluída'});
+                  }}
+                >
+                  <option value="Pendente">Pendente</option>
+                  <option value="Em andamento">Em andamento</option>
+                  <option value="Atrasada">Atrasada</option>
+                  <option value="Concluída">Concluída</option>
+                </select>
               </div>
 
+              {/* ── 8. Data da Conclusão + Hora da Conclusão ── */}
+              <div className="form-section-label">Data da Conclusão</div>
+              <div className="form-row">
+                <div className="form-group flex-1">
+                  <label>Data da Conclusão</label>
+                  <input
+                    type="date"
+                    value={formData.dataConclusao}
+                    onChange={(e) => setFormData({...formData, dataConclusao: e.target.value})}
+                  />
+                </div>
+                <div className="form-group flex-1">
+                  <label>Hora da Conclusão</label>
+                  <input
+                    type="time"
+                    value={formData.horaConclusao}
+                    onChange={(e) => setFormData({...formData, horaConclusao: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              {/* ── Rodapé ── */}
               <div className="modal-footer" style={{ marginTop: '1.5rem' }}>
                 {editingId && (
                   <button
@@ -557,6 +598,18 @@ const Tasks = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* MODAL IMPORTAR TAREFAS */}
+      {showImport && (
+        <ImportTasks
+          onClose={() => setShowImport(false)}
+          onImport={async (tasksArray) => {
+            const result = await bulkAddTasks(tasksArray);
+            if (result.success) setShowImport(false);
+            return result;
+          }}
+        />
       )}
     </div>
   );

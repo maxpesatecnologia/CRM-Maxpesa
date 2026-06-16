@@ -79,8 +79,14 @@ const normalizeTask = (t) => ({
   ...t,
   tipoTarefa:      t.tipoTarefa      ?? t.tipotarefa      ?? '',
   dataAgendamento: t.dataAgendamento ?? t.dataagendamento ?? '',
-  valor:           t.valor           ?? 0,
+  horario:         t.horario         ?? '',
   negociacao:      t.negociacao      ?? '',
+  dataCriacao:     t.dataCriacao     ?? t.datacriacao     ?? '',
+  horaCriacao:     t.horaCriacao     ?? t.horacriacao     ?? '',
+  dataConclusao:   t.dataConclusao   ?? t.dataconclusao   ?? '',
+  horaConclusao:   t.horaConclusao   ?? t.horaconclusao   ?? '',
+  status:          t.status          ?? (t.concluida ? 'Concluída' : 'Pendente'),
+  valor:           t.valor           ?? 0,
   // Reconstrói dataHora para uso na UI (não existe no banco)
   dataHora: t.dataHora ?? (
     (t.dataAgendamento || t.dataagendamento)
@@ -96,10 +102,26 @@ const toDbTask = (t) => {
   // Campos que NÃO existem na tabela — remover antes do insert/update
   delete out.dataHora;
   delete out.responsaveis;
-  // Mapeamentos necessários
+  // Mapeamentos necessários (camelCase → lowercase do Postgres)
   if ('tipoTarefa'      in out) { out.tipotarefa      = out.tipoTarefa;      delete out.tipoTarefa; }
   if ('dataAgendamento' in out) { out.dataagendamento = out.dataAgendamento; delete out.dataAgendamento; }
-  return out;
+  if ('dataCriacao'     in out) { out.datacriacao     = out.dataCriacao;     delete out.dataCriacao; }
+  if ('horaCriacao'     in out) { out.horacriacao     = out.horaCriacao;     delete out.horaCriacao; }
+  if ('dataConclusao'   in out) { out.dataconclusao   = out.dataConclusao;   delete out.dataConclusao; }
+  if ('horaConclusao'   in out) { out.horaconclusao   = out.horaConclusao;   delete out.horaConclusao; }
+
+  // Lista branca de colunas permitidas na tabela tasks
+  const allowed = [
+    'id', 'created_at', 'titulo', 'assunto', 'descricao', 'empresa', 'negociacao',
+    'tipotarefa', 'vendedor', 'concluida', 'status',
+    'dataagendamento', 'horario',
+    'datacriacao', 'horacriacao',
+    'dataconclusao', 'horaconclusao',
+    'valor'
+  ];
+  const filtered = {};
+  allowed.forEach(col => { if (col in out) filtered[col] = out[col]; });
+  return filtered;
 };
 
 // Converte campos de contato (empresa) para os nomes reais das colunas e filtra permitidos
@@ -406,6 +428,22 @@ export const CRMProvider = ({ children }) => {
     }
   };
 
+  const bulkAddTasks = async (tasksArray) => {
+    const dbTasks = tasksArray.map(toDbTask);
+    const { data, error } = await supabase.from('tasks').insert(dbTasks).select();
+    if (!error && data) {
+      const normalized = data.map(normalizeTask);
+      setTasks(prev => [...normalized, ...prev]);
+      toast.success(`${data.length} tarefa(s) importada(s) com sucesso!`);
+      return { success: true, count: data.length };
+    } else {
+      console.error("Erro na importação de tarefas:", error);
+      const errMsg = String(error?.message || error?.details || 'Erro desconhecido');
+      toast.error('Erro na importação: ' + errMsg);
+      return { success: false, error: errMsg };
+    }
+  };
+
   const updateDeal = async (id, updatedFields) => {
     const dbPayload = toDbDeal(updatedFields);
     const { data, error } = await supabase.from('deals').update(dbPayload).eq('id', id).select();
@@ -614,6 +652,7 @@ export const CRMProvider = ({ children }) => {
       addPerson,
       bulkAddContacts,
       bulkAddDeals,
+      bulkAddTasks,
       clearAllDeals,
       updateDeal,
       updateContact,
