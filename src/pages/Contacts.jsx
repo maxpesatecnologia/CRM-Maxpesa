@@ -4,6 +4,7 @@ import { Plus, Search, Building2, MapPin, Phone, Mail, X, Briefcase, ListTodo, C
 import './Contacts.css';
 import './CompanyDetails.css';
 import DealModal from '../components/DealModal';
+import TaskModal from '../components/TaskModal';
 
 const Contacts = () => {
   const { contacts, addContact, updateContact, deleteContact, deals, tasks, stages, segments, users, people } = useCRM();
@@ -12,6 +13,9 @@ const Contacts = () => {
   
   const [selectedDealId, setSelectedDealId] = useState(null);
   const [isDealModalOpen, setIsDealModalOpen] = useState(false);
+
+  const [selectedTaskId, setSelectedTaskId] = useState(null);
+  const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
   
   // Estado para visualização 360
   const [viewingContact, setViewingContact] = useState(null);
@@ -289,7 +293,7 @@ const Contacts = () => {
               {activeDetailTab === 'atividades' && (
                 <div className="list-container">
                   {contactTasks.length > 0 ? contactTasks.map(task => (
-                    <div key={task.id} className="list-item">
+                    <div key={task.id} className="list-item" onClick={() => { setSelectedTaskId(task.id); setIsTaskModalOpen(true); }} style={{ cursor: 'pointer' }}>
                       <div className="item-main-info">
                         <h4 style={{ textDecoration: task.concluida ? 'line-through' : 'none', color: task.concluida ? 'var(--text-muted)' : 'var(--text-main)' }}>
                           {task.titulo || task.assunto}
@@ -494,6 +498,15 @@ const Contacts = () => {
           setSelectedDealId(null);
         }} 
         dealId={selectedDealId} 
+      />
+
+      <TaskModal 
+        isOpen={isTaskModalOpen} 
+        onClose={() => {
+          setIsTaskModalOpen(false);
+          setSelectedTaskId(null);
+        }} 
+        taskId={selectedTaskId} 
       />
     </div>
   );

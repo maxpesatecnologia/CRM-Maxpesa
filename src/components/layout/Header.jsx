@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, Bell, HelpCircle, LogOut, Settings, X, Lock } from 'lucide-react';
+import { Bell, HelpCircle, LogOut, Settings, X, Lock } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import './layout.css';
@@ -51,13 +51,6 @@ const Header = () => {
 
   return (
     <header className="top-header">
-      <div className="header-left">
-        <div className="header-search">
-          <Search size={18} className="text-muted" />
-          <input type="text" placeholder="Buscar empresas ou contatos..." />
-        </div>
-      </div>
-      
       <div className="header-right">
         <button className="toggle-btn" title="Notificações">
           <Bell size={20} />
