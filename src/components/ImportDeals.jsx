@@ -15,7 +15,7 @@ const COLUMN_ALIASES = {
   fonte:           ['fonte', 'origem', 'source'],
   campanha:        ['campanha', 'campaign'],
   produto:         ['produto', 'equipamento', 'product', 'equip', 'veiculo', 'veículo', 'frota', 'tipo equip', 'tipo de equipamento', 'modelo'],
-  motivoPerda:     ['motivo perda', 'motivoperda', 'motivo', 'motivo de perda'],
+  motivoPerda:     ['motivo perda', 'motivoperda', 'motivo', 'motivo de perda', 'motivo da perda', 'reason', 'loss reason', 'razao perda', 'razão perda'],
 };
 
 // Remove acentos e normaliza string para lookup de etapa
@@ -105,6 +105,7 @@ const FIELD_LABELS = {
   valorUnico: 'Valor Único (R$)', valorRecorrente: 'Valor Recorrente (R$)',
   etapaId: 'Etapa do Funil', vendedor: 'Vendedor',
   fonte: 'Fonte', campanha: 'Campanha', produto: 'Produto / Equipamento',
+  motivoPerda: 'Motivo de Perda',
 };
 
 export default function ImportDeals({ onClose, onImport }) {
@@ -235,7 +236,7 @@ export default function ImportDeals({ onClose, onImport }) {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.8rem' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc' }}>
-                    {['Empresa', 'Negociação', 'Data Criação', 'Etapa', 'Valor', 'Vendedor'].map(h => (
+                    {['Empresa', 'Negociação', 'Data Criação', 'Etapa', 'Valor', 'Vendedor', 'Motivo de Perda'].map(h => (
                       <th key={h} style={{ padding: '8px 10px', textAlign: 'left', borderBottom: '1px solid var(--border-color)', fontWeight: '700' }}>{h}</th>
                     ))}
                   </tr>
@@ -253,6 +254,7 @@ export default function ImportDeals({ onClose, onImport }) {
                         {d.valorUnico > 0 ? `R$ ${d.valorUnico.toLocaleString('pt-BR')}` : '—'}
                       </td>
                       <td style={{ padding: '7px 10px' }}>{d.vendedor || '—'}</td>
+                      <td style={{ padding: '7px 10px', color: d.motivoPerda ? '#0369a1' : 'var(--text-muted)' }}>{d.motivoPerda || '—'}</td>
                     </tr>
                   ))}
                 </tbody>
