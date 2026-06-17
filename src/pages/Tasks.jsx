@@ -399,17 +399,24 @@ const Tasks = () => {
               {/* ── 1. Empresa + Negociação ── */}
               <div className="form-row">
                 <div className="form-group flex-1">
-                  <label>Empresa *</label>
-                  <select
-                    value={formData.empresa}
-                    onChange={(e) => setFormData({...formData, empresa: e.target.value})}
-                    required
-                  >
-                    <option value="">Selecione a empresa...</option>
-                    {contacts.map(c => (
-                      <option key={c.id} value={c.empresa}>{c.empresa}</option>
-                    ))}
-                  </select>
+                  <label>Empresa ou Contato *</label>
+                  <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                    <Search size={16} style={{ position: 'absolute', left: '10px', color: 'var(--text-muted)', pointerEvents: 'none' }} />
+                    <input
+                      type="text"
+                      list="empresas-list-tasks"
+                      value={formData.empresa}
+                      onChange={(e) => setFormData({...formData, empresa: e.target.value})}
+                      placeholder="Buscar empresa ou contato..."
+                      required
+                      style={{ width: '100%', paddingLeft: '32px', paddingRight: '12px', border: '1px solid var(--border-color)', borderRadius: 'var(--radius-md)', height: '38px' }}
+                    />
+                    <datalist id="empresas-list-tasks">
+                      {contacts.map(c => (
+                        <option key={c.id} value={c.empresa}>{c.empresa}</option>
+                      ))}
+                    </datalist>
+                  </div>
                 </div>
 
                 <div className="form-group flex-1">

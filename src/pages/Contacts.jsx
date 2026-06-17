@@ -3,11 +3,15 @@ import { useCRM } from '../context/CRMContext';
 import { Plus, Search, Building2, MapPin, Phone, Mail, X, Briefcase, ListTodo, Calendar, DollarSign, Info, Target, Share2, Paperclip, Users } from 'lucide-react';
 import './Contacts.css';
 import './CompanyDetails.css';
+import DealModal from '../components/DealModal';
 
 const Contacts = () => {
   const { contacts, addContact, updateContact, deleteContact, deals, tasks, stages, segments, users, people } = useCRM();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  
+  const [selectedDealId, setSelectedDealId] = useState(null);
+  const [isDealModalOpen, setIsDealModalOpen] = useState(false);
   
   // Estado para visualização 360
   const [viewingContact, setViewingContact] = useState(null);
@@ -235,7 +239,7 @@ const Contacts = () => {
               {activeDetailTab === 'vendas' && (
                 <div className="list-container">
                   {contactDeals.length > 0 ? contactDeals.map(deal => (
-                    <div key={deal.id} className="list-item">
+                    <div key={deal.id} className="list-item" onClick={() => { setSelectedDealId(deal.id); setIsDealModalOpen(true); }} style={{ cursor: 'pointer' }}>
                       <div className="item-main-info">
                         <h4>{deal.nomeNegocacao || deal.empresa}</h4>
                         <div className="item-sub-info">
@@ -482,6 +486,15 @@ const Contacts = () => {
           </div>
         </div>
       )}
+
+      <DealModal 
+        isOpen={isDealModalOpen} 
+        onClose={() => {
+          setIsDealModalOpen(false);
+          setSelectedDealId(null);
+        }} 
+        dealId={selectedDealId} 
+      />
     </div>
   );
 };

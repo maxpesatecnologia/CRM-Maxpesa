@@ -23,6 +23,7 @@ const normalizeDeal = (d) => {
     campanha:        safeStr(d.campanha),
     produto:         safeStr(d.produto),
     vendedor:        safeStr(d.vendedor),
+    anotacoes:       safeStr(d.anotacoes) ?? '',
   };
 
   // Limpa campos duplicados lowercase (mantém apenas camelCase na UI)
@@ -62,7 +63,7 @@ const toDbDeal = (d) => {
   const allowedColumns = [
     'id', 'created_at', 'empresa', 'nomeNegocacao', 'valorunico', 'valorrecorrente',
     'fonte', 'campanha', 'etapaid', 'motivoperda', 'datacriacao',
-    'datafechamento', 'produto', 'vendedor', 'anexo', 'anexoNome'
+    'datafechamento', 'produto', 'vendedor', 'anexo', 'anexoNome', 'anotacoes'
   ];
 
   // Filtra o objeto para conter apenas as colunas válidas
