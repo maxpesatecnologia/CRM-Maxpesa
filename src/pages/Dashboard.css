@@ -362,3 +362,63 @@
 .conversion-mini-card.lost { border-bottom: 3px solid #EF4444; }
 .conversion-mini-card.lost .mini-card-fill { background: #EF4444; }
 .conversion-mini-card.lost .mini-card-value { color: #EF4444; }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .dashboard-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .dashboard-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .dashboard-filters {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+
+  .filter-group {
+    flex-wrap: wrap;
+  }
+
+  .filter-select,
+  .filter-input {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .metrics-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .metric-card {
+    padding: 1rem;
+  }
+
+  .metric-value {
+    font-size: 1.4rem;
+  }
+
+  .chart-card {
+    padding: 1rem;
+    overflow-x: auto;
+  }
+
+  .bar-chart {
+    min-width: 320px;
+  }
+
+  .summary-row {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .conversion-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+

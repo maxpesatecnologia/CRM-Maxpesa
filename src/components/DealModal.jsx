@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useCRM } from '../context/CRMContext';
 import { Search, X, Paperclip, FileText, CheckSquare } from 'lucide-react';
+import './DealModal.css';
 
 const DealModal = ({ isOpen, onClose, dealId }) => {
   const { stages, deals, addDeal, updateDeal, lossReasons, fleet, contacts, campaigns, leadSources, users, tasks, addTask } = useCRM();
@@ -124,28 +125,10 @@ const DealModal = ({ isOpen, onClose, dealId }) => {
         </div>
         
         {dealId && (
-          <div style={{ display: 'flex', gap: '1rem', borderBottom: '1px solid var(--border-color)', marginBottom: '1rem' }}>
-            <button 
-              type="button" 
-              onClick={() => setActiveTab('detalhes')} 
-              style={{ background: 'none', border: 'none', borderBottom: activeTab === 'detalhes' ? '2px solid var(--primary-color)' : '2px solid transparent', padding: '0.5rem 1rem', cursor: 'pointer', fontWeight: activeTab === 'detalhes' ? '600' : '400', color: activeTab === 'detalhes' ? 'var(--primary-color)' : 'var(--text-muted)' }}
-            >
-              Detalhes
-            </button>
-            <button 
-              type="button" 
-              onClick={() => setActiveTab('anotacoes')} 
-              style={{ background: 'none', border: 'none', borderBottom: activeTab === 'anotacoes' ? '2px solid var(--primary-color)' : '2px solid transparent', padding: '0.5rem 1rem', cursor: 'pointer', fontWeight: activeTab === 'anotacoes' ? '600' : '400', color: activeTab === 'anotacoes' ? 'var(--primary-color)' : 'var(--text-muted)' }}
-            >
-              Anotações
-            </button>
-            <button 
-              type="button" 
-              onClick={() => setActiveTab('tarefas')} 
-              style={{ background: 'none', border: 'none', borderBottom: activeTab === 'tarefas' ? '2px solid var(--primary-color)' : '2px solid transparent', padding: '0.5rem 1rem', cursor: 'pointer', fontWeight: activeTab === 'tarefas' ? '600' : '400', color: activeTab === 'tarefas' ? 'var(--primary-color)' : 'var(--text-muted)' }}
-            >
-              Tarefas
-            </button>
+          <div className="deal-modal-tabs">
+            <button type="button" onClick={() => setActiveTab('detalhes')} className={`deal-modal-tab ${activeTab === 'detalhes' ? 'active' : ''}`}>Detalhes</button>
+            <button type="button" onClick={() => setActiveTab('anotacoes')} className={`deal-modal-tab ${activeTab === 'anotacoes' ? 'active' : ''}`}>Anotações</button>
+            <button type="button" onClick={() => setActiveTab('tarefas')} className={`deal-modal-tab ${activeTab === 'tarefas' ? 'active' : ''}`}>Tarefas</button>
           </div>
         )}
 
@@ -225,7 +208,7 @@ const DealModal = ({ isOpen, onClose, dealId }) => {
             )}
 
             {/* 3. Datas lado a lado */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="deal-modal-grid-2">
               <div className="form-group">
                 <label>Data de Criação</label>
                 <input 
@@ -245,7 +228,7 @@ const DealModal = ({ isOpen, onClose, dealId }) => {
             </div>
 
             {/* 4. Valores */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+            <div className="deal-modal-grid-2">
               <div className="form-group">
                 <label>Valor Único (R$)</label>
                 <input 
@@ -407,7 +390,7 @@ const DealModal = ({ isOpen, onClose, dealId }) => {
                   concluida: false
                 });
                 e.target.reset();
-              }} style={{ display: 'flex', gap: '0.5rem' }}>
+              }} className="deal-quick-task-form">
                 <input name="assunto" type="text" placeholder="Assunto da tarefa..." required style={{ flex: 1, padding: '0.5rem', borderRadius: '4px', border: '1px solid #cbd5e1' }} />
                 <button type="submit" className="btn-primary" style={{ padding: '0.5rem 1rem' }}>Adicionar</button>
               </form>

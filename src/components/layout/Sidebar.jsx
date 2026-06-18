@@ -4,7 +4,7 @@ import { LayoutDashboard, Columns3, Users as UsersIcon, Building2, Settings, Che
 import { SidebarLogo, SidebarLogoMark } from '../ui/MaxpesaLogo';
 import './layout.css';
 
-const Sidebar = () => {
+const Sidebar = ({ onClose, isMobileDrawer = false }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
@@ -16,43 +16,45 @@ const Sidebar = () => {
         ) : (
           <SidebarLogo />
         )}
-        <button className="toggle-btn" onClick={() => setCollapsed(!collapsed)}>
-          {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
-        </button>
+        {!isMobileDrawer && (
+          <button className="toggle-btn" onClick={() => setCollapsed(!collapsed)}>
+            {collapsed ? <ChevronRight size={20} /> : <ChevronLeft size={20} />}
+          </button>
+        )}
       </div>
       
       <div className="nav-links">
-        <NavLink to="/dashboard" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/dashboard" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
           <LayoutDashboard size={20} className="nav-icon" />
           <span className="nav-text">Dashboard</span>
         </NavLink>
         
-        <NavLink to="/pipeline" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/pipeline" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
           <Columns3 size={20} className="nav-icon" />
           <span className="nav-text">Funil de Vendas</span>
         </NavLink>
         
-        <NavLink to="/contacts" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/contacts" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
           <Building2 size={20} className="nav-icon" />
           <span className="nav-text">Empresas</span>
         </NavLink>
 
-        <NavLink to="/people" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/people" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
           <UsersIcon size={20} className="nav-icon" />
           <span className="nav-text">Contatos</span>
         </NavLink>
 
-        <NavLink to="/tarefas" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/tarefas" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
           <CheckSquare size={20} className="nav-icon" />
           <span className="nav-text">Tarefas</span>
         </NavLink>
 
-        <NavLink to="/relatorios" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/relatorios" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
           <BarChart2 size={20} className="nav-icon" />
           <span className="nav-text">Relatórios</span>
         </NavLink>
 
-        <NavLink to="/usuarios" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`}>
+        <NavLink to="/usuarios" className={({isActive}) => `nav-item ${isActive ? 'active' : ''}`} onClick={onClose}>
           <UserCircle2 size={20} className="nav-icon" />
           <span className="nav-text">Usuários</span>
         </NavLink>

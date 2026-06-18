@@ -195,3 +195,77 @@
   padding: 3rem 1.5rem;
   color: var(--text-muted);
 }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  /* Modal vira bottom-sheet */
+  .details-modal-overlay {
+    align-items: flex-end;
+  }
+
+  .details-modal-content {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92vh;
+    border-radius: 20px 20px 0 0;
+    animation: slideUpMobile 0.3s ease-out;
+  }
+
+  @keyframes slideUpMobile {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+
+  /* Header compacto */
+  .details-modal-header {
+    padding: 1rem;
+  }
+
+  .company-logo-placeholder {
+    width: 44px;
+    height: 44px;
+    font-size: 1.1rem;
+  }
+
+  .company-title-info h2 {
+    font-size: 1.1rem;
+  }
+
+  /* Tabs com scroll horizontal */
+  .details-tabs {
+    padding: 0 1rem;
+    gap: 1.25rem;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tab-btn {
+    font-size: 0.82rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* Body compacto */
+  .details-body {
+    padding: 1rem;
+  }
+
+  /* Info section em coluna única */
+  .info-section {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  /* List items empilhados */
+  .list-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+
+  .item-sub-info {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+}

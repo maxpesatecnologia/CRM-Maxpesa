@@ -133,3 +133,26 @@
     transform: translateY(0);
   }
 }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .login-card {
+    padding: 2rem 1.5rem;
+    border-radius: 12px;
+    margin: 1rem;
+    max-width: 100%;
+  }
+
+  .logo-placeholder h1 {
+    font-size: 2rem;
+  }
+
+  .logo-placeholder p {
+    font-size: 0.9rem;
+  }
+
+  .login-button {
+    padding: 12px;
+    font-size: 0.95rem;
+  }
+}

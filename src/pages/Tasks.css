@@ -378,3 +378,58 @@
   padding-bottom: 0.4rem;
   border-bottom: 1px solid #F1F5F9;
 }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .tasks-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+  }
+
+  .tasks-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .tasks-header-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .tasks-filters-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-input-group {
+    min-width: 0;
+  }
+
+  .tasks-summary-stats {
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+
+  /* Tabela com scroll horizontal */
+  .tasks-list-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .tasks-table {
+    min-width: 600px;
+  }
+
+  /* Modal de tarefa fullscreen no mobile */
+  .task-modal {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 16px 16px 0 0;
+  }
+
+  .form-row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+

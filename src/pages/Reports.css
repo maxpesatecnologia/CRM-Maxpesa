@@ -344,3 +344,43 @@
   color: #DC2626;
   border: 1px solid #FCA5A5;
 }
+
+/* ── Mobile ── */
+@media (max-width: 768px) {
+  .reports-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .reports-card {
+    padding: 1.25rem;
+  }
+
+  .module-selector {
+    gap: 0.4rem;
+  }
+
+  .module-btn {
+    font-size: 0.75rem;
+    padding: 0.35rem 0.6rem;
+  }
+
+  .export-buttons {
+    flex-direction: column;
+  }
+
+  .export-btn {
+    flex: unset;
+    width: 100%;
+  }
+
+  /* Preview com scroll horizontal */
+  .preview-table {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .preview-table table {
+    min-width: 480px;
+  }
+}
+

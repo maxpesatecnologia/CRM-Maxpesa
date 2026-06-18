@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { Bell, HelpCircle, LogOut, Settings, X, Lock } from 'lucide-react';
+import { Bell, HelpCircle, LogOut, Settings, X, Lock, Menu } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import './layout.css';
 
-const Header = () => {
+const Header = ({ onMenuClick }) => {
   const { signOut, user } = useAuth();
   const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -51,6 +51,11 @@ const Header = () => {
 
   return (
     <header className="top-header">
+      {/* Botão hambúrguer — só aparece no mobile */}
+      <button className="hamburger-btn" onClick={onMenuClick} aria-label="Abrir menu">
+        <Menu size={22} />
+      </button>
+
       <div className="header-right">
         <button className="toggle-btn" title="Notificações">
           <Bell size={20} />

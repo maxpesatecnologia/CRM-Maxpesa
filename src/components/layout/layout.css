@@ -325,3 +325,173 @@
   background-color: var(--bg-color);
   color: var(--primary-color);
 }
+
+/* ── Hambúrguer (oculto no desktop) ── */
+.hamburger-btn {
+  display: none;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-main);
+  padding: 0.5rem;
+  border-radius: var(--radius-sm);
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+.hamburger-btn:hover {
+  background-color: var(--bg-color);
+}
+
+/* ── Bottom Navigation (oculta no desktop) ── */
+.bottom-nav {
+  display: none;
+}
+
+/* ════════════════════════════════════════════
+   MOBILE — max-width: 768px
+   ════════════════════════════════════════════ */
+@media (max-width: 768px) {
+
+  /* Esconde o sidebar lateral */
+  .layout-wrapper > .sidebar {
+    display: none;
+  }
+
+  /* Layout ocupa a tela toda */
+  .layout-wrapper {
+    flex-direction: column;
+    overflow: auto;
+  }
+
+  /* Mostra botão hambúrguer no header */
+  .hamburger-btn {
+    display: flex;
+  }
+
+  /* Header mobile */
+  .top-header {
+    height: 56px;
+    padding: 0 1rem;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 20;
+  }
+
+  /* Busca escondida no mobile */
+  .header-search {
+    display: none;
+  }
+
+  /* Conteúdo principal com espaço para a bottom nav */
+  .page-content {
+    padding: 1rem;
+    padding-bottom: 80px;
+  }
+
+  /* ── Bottom Navigation ── */
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 64px;
+    background-color: var(--sidebar-bg);
+    border-top: 1px solid var(--sidebar-border);
+    z-index: 100;
+    align-items: stretch;
+  }
+
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: var(--sidebar-text);
+    text-decoration: none;
+    font-size: 0.6rem;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    transition: color 0.2s;
+    padding: 0;
+  }
+
+  .bottom-nav-item:hover,
+  .bottom-nav-item.active {
+    color: var(--primary-color);
+  }
+
+  .bottom-nav-item.active svg {
+    filter: drop-shadow(0 0 4px rgba(227, 6, 19, 0.5));
+  }
+
+  .bottom-nav-more {
+    color: var(--sidebar-text);
+  }
+
+  /* ── Overlay mobile ── */
+  .mobile-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 200;
+    backdrop-filter: blur(2px);
+    animation: fadeOverlay 0.2s ease;
+  }
+
+  @keyframes fadeOverlay {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  /* ── Drawer lateral mobile ── */
+  .mobile-drawer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 280px;
+    background-color: var(--sidebar-bg);
+    display: flex;
+    flex-direction: column;
+    animation: slideIn 0.25s ease;
+    overflow-y: auto;
+  }
+
+  @keyframes slideIn {
+    from { transform: translateX(-100%); }
+    to   { transform: translateX(0); }
+  }
+
+  .drawer-close-btn {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: var(--sidebar-text);
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: var(--radius-sm);
+    z-index: 10;
+    transition: color 0.2s;
+  }
+  .drawer-close-btn:hover {
+    color: white;
+  }
+
+  /* Sidebar dentro do drawer ocupa a tela toda */
+  .mobile-drawer .sidebar {
+    display: flex !important;
+    width: 100% !important;
+    height: 100%;
+  }
+}
+
