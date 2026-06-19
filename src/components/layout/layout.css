@@ -349,13 +349,15 @@
 }
 
 /* ════════════════════════════════════════════
-   MOBILE — max-width: 768px
+   MOBILE — max-width: 1024px
    ════════════════════════════════════════════ */
-@media (max-width: 768px) {
+@media (max-width: 1024px) {
 
   /* Esconde o sidebar lateral */
   .layout-wrapper > .sidebar {
-    display: none;
+    display: none !important;
+    width: 0 !important;
+    overflow: hidden !important;
   }
 
   /* Layout ocupa a tela toda */
@@ -366,7 +368,7 @@
 
   /* Mostra botão hambúrguer no header */
   .hamburger-btn {
-    display: flex;
+    display: flex !important;
   }
 
   /* Header mobile */
@@ -392,7 +394,7 @@
 
   /* ── Bottom Navigation ── */
   .bottom-nav {
-    display: flex;
+    display: flex !important;
     position: fixed;
     bottom: 0;
     left: 0;
@@ -491,6 +493,7 @@
   .mobile-drawer .sidebar {
     display: flex !important;
     width: 100% !important;
+    overflow: visible !important;
     height: 100%;
   }
 }
