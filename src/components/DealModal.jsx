@@ -3,26 +3,38 @@ import { useCRM } from '../context/CRMContext';
 import { Search, X, Paperclip, FileText, CheckSquare } from 'lucide-react';
 import './DealModal.css';
 
+// Converte o campo produto (string ou JSON) para array de objetos { valor, custom }
+const parseProdutos = (produto) => {
+  if (!produto) return [{ valor: '', custom: '' }];
+  try {
+    const arr = JSON.parse(produto);
+    if (Array.isArray(arr)) return arr.map(p => ({ valor: p, custom: '' }));
+  } catch {}
+  return [{ valor: produto, custom: '' }];
+};
+
+const emptyForm = {
+  empresa: '',
+  nomeNegocacao: '',
+  dataCriacao: new Date().toISOString().slice(0, 10),
+  dataFechamento: '',
+  valorUnico: '',
+  valorRecorrente: '',
+  etapaId: 'etapa-1',
+  motivoPerda: '',
+  campanha: '',
+  fonte: '',
+  produtos: [{ valor: '', custom: '' }],
+  anexo: null,
+  anexoNome: '',
+  vendedor: '',
+  anotacoes: ''
+};
+
 const DealModal = ({ isOpen, onClose, dealId }) => {
   const { stages, deals, addDeal, updateDeal, lossReasons, fleet, contacts, campaigns, leadSources, users, tasks, addTask } = useCRM();
   const [activeTab, setActiveTab] = useState('detalhes');
-  const [newDealForm, setNewDealForm] = useState({
-    empresa: '', 
-    nomeNegocacao: '',
-    dataCriacao: new Date().toISOString().slice(0, 10),
-    dataFechamento: '',
-    valorUnico: '', 
-    valorRecorrente: '',
-    etapaId: 'etapa-1',
-    motivoPerda: '',
-    campanha: '',
-    fonte: '', 
-    produto: '',
-    anexo: null,
-    anexoNome: '',
-    vendedor: '',
-    anotacoes: ''
-  });
+  const [newDealForm, setNewDealForm] = useState(emptyForm);
 
   useEffect(() => {
     if (isOpen) {
@@ -41,7 +53,7 @@ const DealModal = ({ isOpen, onClose, dealId }) => {
             motivoPerda: deal.motivoPerda || deal.motivoperda || '',
             campanha: deal.campanha || '',
             fonte: deal.fonte || '',
-            produto: deal.produto || '',
+            produtos: parseProdutos(deal.produto),
             anexo: deal.anexo || null,
             anexoNome: deal.anexoNome || '',
             vendedor: deal.vendedor || '',
@@ -49,23 +61,7 @@ const DealModal = ({ isOpen, onClose, dealId }) => {
           });
         }
       } else {
-        setNewDealForm({
-          empresa: '', 
-          nomeNegocacao: '',
-          dataCriacao: new Date().toISOString().slice(0, 10),
-          dataFechamento: '',
-          valorUnico: '', 
-          valorRecorrente: '',
-          etapaId: 'etapa-1',
-          motivoPerda: '',
-          campanha: '',
-          fonte: '', 
-          produto: '',
-          anexo: null,
-          anexoNome: '',
-          vendedor: '',
-          anotacoes: ''
-        });
+        setNewDealForm(emptyForm);
       }
     }
   }, [isOpen, dealId, deals]);
@@ -96,23 +92,29 @@ const DealModal = ({ isOpen, onClose, dealId }) => {
   const handleCreateDeal = (e) => {
     e?.preventDefault();
     if (!newDealForm.empresa) return;
-    
-    const finalProduct = newDealForm.produto === 'Personalizado' ? newDealForm.produtoManual : newDealForm.produto;
-    
+
+    const finalProdutos = newDealForm.produtos
+      .map(p => p.valor === 'Personalizado' ? p.custom : p.valor)
+      .filter(p => p && p.trim() !== '');
+
+    const produto = finalProdutos.length === 0 ? ''
+      : finalProdutos.length === 1 ? finalProdutos[0]
+      : JSON.stringify(finalProdutos);
+
     const dealPayload = {
       ...newDealForm,
-      produto: finalProduct,
+      produto,
       valorUnico: Number(newDealForm.valorUnico) || 0,
       valorRecorrente: Number(newDealForm.valorRecorrente) || 0
     };
-    delete dealPayload.produtoManual;
-    
+    delete dealPayload.produtos;
+
     if (dealId) {
       updateDeal(dealId, dealPayload);
     } else {
       addDeal(dealPayload);
     }
-    
+
     onClose();
   };
 
@@ -180,32 +182,65 @@ const DealModal = ({ isOpen, onClose, dealId }) => {
               </select>
             </div>
 
-            {/* 2.5. Equipamento (Produto) */}
+            {/* 2.5. Equipamentos (múltiplos) */}
             <div className="form-group">
-              <label>Equipamento (Produto)</label>
-              <select 
-                value={newDealForm.produto} 
-                onChange={e => setNewDealForm({...newDealForm, produto: e.target.value})}
-              >
-                <option value="">Selecione o equipamento...</option>
-                {fleet.map(item => (
-                  <option key={item.id} value={item.nome}>{item.nome}</option>
-                ))}
-                <option value="Personalizado">Outro (especificar)</option>
-              </select>
-            </div>
-
-            {newDealForm.produto === 'Personalizado' && (
-              <div className="form-group">
-                <label>Especifique o Equipamento</label>
-                <input 
-                  type="text" 
-                  value={newDealForm.produtoManual || ''} 
-                  onChange={e => setNewDealForm({...newDealForm, produtoManual: e.target.value})} 
-                  placeholder="Nome do equipamento customizado"
-                />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
+                <label style={{ margin: 0 }}>Equipamentos</label>
+                <button
+                  type="button"
+                  onClick={() => setNewDealForm(f => ({ ...f, produtos: [...f.produtos, { valor: '', custom: '' }] }))}
+                  style={{ fontSize: '0.78rem', color: 'var(--primary-color)', background: 'none', border: '1px solid var(--primary-color)', borderRadius: '4px', padding: '2px 10px', cursor: 'pointer', fontWeight: 600 }}
+                >
+                  + Adicionar
+                </button>
               </div>
-            )}
+
+              {newDealForm.produtos.map((prod, idx) => (
+                <div key={idx} style={{ marginBottom: '0.5rem' }}>
+                  <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
+                    <select
+                      value={prod.valor}
+                      onChange={e => {
+                        const updated = newDealForm.produtos.map((p, i) =>
+                          i === idx ? { valor: e.target.value, custom: '' } : p
+                        );
+                        setNewDealForm({ ...newDealForm, produtos: updated });
+                      }}
+                      style={{ flex: 1, padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', fontSize: '0.875rem' }}
+                    >
+                      <option value="">Selecione o equipamento...</option>
+                      {fleet.map(item => (
+                        <option key={item.id} value={item.nome}>{item.nome}</option>
+                      ))}
+                      <option value="Personalizado">Outro (especificar)</option>
+                    </select>
+                    {newDealForm.produtos.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setNewDealForm({ ...newDealForm, produtos: newDealForm.produtos.filter((_, i) => i !== idx) })}
+                        style={{ background: 'none', border: 'none', color: 'var(--danger-color)', cursor: 'pointer', padding: '4px', display: 'flex', alignItems: 'center' }}
+                      >
+                        <X size={16} />
+                      </button>
+                    )}
+                  </div>
+                  {prod.valor === 'Personalizado' && (
+                    <input
+                      type="text"
+                      value={prod.custom}
+                      onChange={e => {
+                        const updated = newDealForm.produtos.map((p, i) =>
+                          i === idx ? { ...p, custom: e.target.value } : p
+                        );
+                        setNewDealForm({ ...newDealForm, produtos: updated });
+                      }}
+                      placeholder="Nome do equipamento customizado"
+                      style={{ width: '100%', marginTop: '0.4rem', padding: '0.5rem 0.75rem', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-color)', fontSize: '0.875rem' }}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
 
             {/* 3. Datas lado a lado */}
             <div className="deal-modal-grid-2">

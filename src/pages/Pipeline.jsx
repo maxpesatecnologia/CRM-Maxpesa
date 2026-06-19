@@ -72,11 +72,16 @@ const DealCard = ({ deal, onEdit, onDelete }) => {
         </div>
       </div>
 
-      {deal.produto && (
-        <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', paddingLeft: '1.5rem'}}>
-          Equipamento: {deal.produto}
-        </div>
-      )}
+      {deal.produto && (() => {
+        let produtos = [];
+        try { const p = JSON.parse(deal.produto); produtos = Array.isArray(p) ? p : [deal.produto]; }
+        catch { produtos = [deal.produto]; }
+        return (
+          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.25rem', paddingLeft: '1.5rem' }}>
+            {produtos.map((p, i) => <div key={i}>Equip.: {p}</div>)}
+          </div>
+        );
+      })()}
       
       <div className="flex flex-col gap-1" style={{ marginTop: '0.5rem' }}>
         <div className="flex items-center gap-1 text-sm font-medium" style={{ color: isWon ? 'var(--success-color)' : isLost ? 'var(--danger-color)' : 'var(--text-main)' }}>
